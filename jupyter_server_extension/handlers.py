@@ -57,8 +57,8 @@ class ListAlgorithmsHandler(IPythonHandler):
     def get(self):
         print("In python list algos handler")
 
-        maap = MAAP(not_self_signed=False)
-        #maap = MAAP(maap_host=maap_api(self.request.host))
+        #maap = MAAP(not_self_signed=False)
+        maap = MAAP(maap_host=maap_api(self.request.host))
         print(maap_api(self.request.host))
 
         try:
@@ -72,8 +72,8 @@ class ListAlgorithmsHandler(IPythonHandler):
 
 class DescribeAlgorithmsHandler(IPythonHandler):
     def get(self):
-        maap = MAAP(not_self_signed=False)
-        #maap = MAAP(maap_host=maap_api(self.request.host))
+        #maap = MAAP(not_self_signed=False)
+        maap = MAAP(maap_host=maap_api(self.request.host))
 
         try:
             r = maap.describeAlgorithm(self.get_argument("algo_id"))
@@ -86,8 +86,8 @@ class DescribeAlgorithmsHandler(IPythonHandler):
 
 class GetQueuesHandler(IPythonHandler):
     def get(self):
-        maap = MAAP(not_self_signed=False)
-        #maap = MAAP(maap_host=maap_api(self.request.host))
+        #maap = MAAP(not_self_signed=False)
+        maap = MAAP(maap_host=maap_api(self.request.host))
         try:
             r = maap.getQueues()
             resp = json.loads(r.text)
@@ -100,8 +100,8 @@ class GetQueuesHandler(IPythonHandler):
 
 class GetCMRCollectionsHandler(IPythonHandler):
     def get(self):
-        maap = MAAP(not_self_signed=False)
-        #maap = MAAP(maap_host=maap_api(self.request.host))
+        #maap = MAAP(not_self_signed=False)
+        maap = MAAP(maap_host=maap_api(self.request.host))
 
         try:
             r = maap.searchCollection()
@@ -114,8 +114,8 @@ class GetCMRCollectionsHandler(IPythonHandler):
 
 class ListUserJobsHandler(IPythonHandler):
     def get(self):
-        maap = MAAP(not_self_signed=False)
-        #maap = MAAP(maap_host=maap_api(self.request.host))
+        #maap = MAAP(not_self_signed=False)
+        maap = MAAP(maap_host=maap_api(self.request.host))
 
         try:
             r = maap.listJobs(self.get_argument("username"))
@@ -138,8 +138,8 @@ class SubmitJobHandler(IPythonHandler):
 
         #test_request = {"algo_id": "test_algo", "username": "anonymous", "queue": "geospec-job_worker-32gb"}
         kwargs = self.args_to_dict()
-        maap = MAAP(not_self_signed=False)
-        #maap = MAAP(maap_host=maap_api(self.request.host))
+        #maap = MAAP(not_self_signed=False)
+        maap = MAAP(maap_host=maap_api(self.request.host))
         resp = maap.submitJob(**kwargs)
         #logger.debug(resp)
         status_code = resp['http_status_code']
@@ -157,8 +157,8 @@ class SubmitJobHandler(IPythonHandler):
 
 class GetJobStatusHandler(IPythonHandler):
     def get(self):
-        maap = MAAP(not_self_signed=False)
-        #maap = MAAP(maap_host=maap_api(self.request.host))
+        #maap = MAAP(not_self_signed=False)
+        maap = MAAP(maap_host=maap_api(self.request.host))
 
         try:
             r = maap.getJobStatus(self.get_argument("job_id"))
@@ -173,8 +173,8 @@ class GetJobStatusHandler(IPythonHandler):
 
 class GetJobResultHandler(IPythonHandler):
     def get(self):
-        maap = MAAP(not_self_signed=False)
-        #maap = MAAP(maap_host=maap_api(self.request.host))
+        #maap = MAAP(not_self_signed=False)
+        maap = MAAP(maap_host=maap_api(self.request.host))
 
         try:
             r = maap.getJobResult(self.get_argument("job_id"))
@@ -190,8 +190,8 @@ class GetJobResultHandler(IPythonHandler):
 
 class GetJobMetricsHandler(IPythonHandler):
     def get(self):
-        maap = MAAP(not_self_signed=False)
-        #maap = MAAP(maap_host=maap_api(self.request.host))
+        #maap = MAAP(not_self_signed=False)
+        maap = MAAP(maap_host=maap_api(self.request.host))
 
         try:
             r = maap.getJobMetrics(self.get_argument("job_id"))
