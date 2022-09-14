@@ -8,6 +8,8 @@ node_modules/
 *.tsbuildinfo
 jupyter_server_extension/labextension
 package-lock.json
+environments.json
+.env
 
 # Integration tests
 ui-tests/test-results/
