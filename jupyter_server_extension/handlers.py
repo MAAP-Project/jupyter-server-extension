@@ -12,6 +12,7 @@ import os
 import xml.etree.ElementTree as ET
 import xmltodict
 import logging
+import requests
 
 logging.basicConfig(format='%(asctime)s %(message)s')
 
@@ -53,6 +54,17 @@ class RouteTestHandler(APIHandler):
     def get(self):
         self.finish(json.dumps({
             "data": "This is /jupyter-server-extension/test1 endpoint!"
+        }))
+
+
+class RouteTest1Handler(APIHandler):
+    # The following decorator should be present on all verb methods (head, get, post,
+    # patch, put, delete, options) to ensure only authorized user can request the
+    # Jupyter server
+    @tornado.web.authenticated
+    def get(self):
+        self.finish(json.dumps({
+            "data": "This is /jupyter-server-extension/maapsec_test endpoint!"
         }))
 
 
@@ -307,20 +319,20 @@ class MaapLoginHandler(IPythonHandler):
             url = '{base_url}/p3/serviceValidate?ticket={ticket}&service={service}&pgtUrl={base_url}&state='.format(
                 base_url=auth_server, ticket=param_ticket, service=param_service)
 
-            logger.debug('auth url: ' + url)
+            print('auth url: ' + url)
 
             auth_response = requests.get(
                 url, 
                 verify=False
             )
 
-            logger.debug('auth response:')
-            logger.debug(auth_response)
+            print('auth response:')
+            print(auth_response)
 
             xmldump = auth_response.text.strip()
             
-            logger.debug('xmldump:')
-            logger.debug(xmldump)
+            print('xmldump:')
+            print(xmldump)
 
             is_valid = True if "cas:authenticationSuccess" in xmldump or \
                             "cas:proxySuccess" in xmldump else False
@@ -369,15 +381,14 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getJobMetrics"), GetJobMetricsHandler)])
 
     # EDSC
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension/edsc", "getGranules"), GetGranulesHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension/edsc", "getQuery"), GetQueryHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, 'jupyter-server-extension/edsc'), IFrameHandler, {'welcome': welcome, 'sites': sites}), (url_path_join(base_url, 'jupyter-server-extension/edsc/proxy'), IFrameProxyHandler)])
+    # web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension/edsc", "getGranules"), GetGranulesHandler)])
+    # web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension/edsc", "getQuery"), GetQueryHandler)])
+    # web_app.add_handlers(host_pattern, [(url_path_join(base_url, 'jupyter-server-extension/edsc'), IFrameHandler, {'welcome': welcome, 'sites': sites}), (url_path_join(base_url, 'jupyter-server-extension/edsc/proxy'), IFrameProxyHandler)])
 
     # MAAPSEC
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, 'jupyter-server-extension/maapsec/environment'), MaapEnvironmentHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, 'jupyter-server-extension/maapsec/login'), MaapLoginHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "maapsec/login", "test"), RouteTestHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "maapsec"), RouteTestHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "maapsec", "environment"), MaapEnvironmentHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "maapsec", "login"), MaapLoginHandler)])
+
 
     web_app.add_handlers(host_pattern, handlers)
     
