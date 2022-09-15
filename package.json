@@ -1,6 +1,6 @@
 {
   "name": "jupyter-server-extension",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "A JupyterLab extension.",
   "keywords": [
     "jupyter",
@@ -43,6 +43,7 @@
     "install:extension": "jlpm build",
     "lint": "jlpm stylelint && jlpm prettier && jlpm eslint",
     "lint:check": "jlpm stylelint:check && jlpm prettier:check && jlpm eslint:check",
+    "nuke": "jlpm clean:all rimraf jupyter_server_extension/node_modules",
     "prettier": "jlpm prettier:base --write --list-different",
     "prettier:base": "prettier \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md}\"",
     "prettier:check": "jlpm prettier:base --check",

@@ -34,6 +34,15 @@ def get_maap_config(host):
 def maap_api(host):
     return get_maap_config(host)['api_server']
 
+def maap_ade_url(host):
+	return 'https://{}'.format(get_maap_config(host)['ade_server'])
+
+def maap_api_url(host):
+	return 'https://{}'.format(get_maap_config(host)['api_server'])
+
+def dps_bucket_name(host):
+	return get_maap_config(host)['workspace_bucket']
+
 
 class RouteHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
@@ -362,6 +371,163 @@ class MaapLoginHandler(IPythonHandler):
             return ''
 
 
+######################################
+######################################
+#
+# User Workspace Management
+#
+######################################
+######################################
+
+class InjectKeyHandler(IPythonHandler):
+    def get(self):
+        public_key = self.get_argument('key', '')
+
+        if public_key:
+            print("=== Injecting SSH KEY ===")
+
+            # Check if .ssh directory exists, if not create it
+            os.chdir('/projects')
+            if not os.path.exists(".ssh"):
+                os.makedirs(".ssh")
+
+            # Check if authorized_keys file exits, if not create it
+            if not os.path.exists(".ssh/authorized_keys"):
+                with open(".ssh/authorized_keys", 'w'):
+                    pass
+
+            # Check if key already in file
+            with open('.ssh/authorized_keys', 'r') as f:
+                linelist = f.readlines()
+
+            found = False
+            for line in linelist:
+                if public_key in line:
+                    print("Key already in authorized_keys")
+                    found = True
+
+            # If not in file, inject key into authorized keys
+            if not found:
+                cmd = "echo " + public_key + " >> .ssh/authorized_keys && chmod 700 /projects && chmod 700 .ssh/ && chmod 600 .ssh/authorized_keys"
+                print(cmd)
+                subprocess.check_output(cmd, shell=True)
+                print("=== INJECTED KEY ===")
+            else:
+                print("=== KEY ALREADY PRESENT ===")
+
+        print("=== Checking for existence of MAAP_PGT ===")
+
+        proxy_granting_ticket = self.get_argument('proxyGrantingTicket', '')
+
+        if proxy_granting_ticket:
+            print("=== MAAP_PGT found. Adding variable to environment ===")
+            os.environ["MAAP_PGT"] = proxy_granting_ticket
+        else:
+            print("=== No MAAP_PGT found ===")
+
+
+class GetSSHInfoHandler(IPythonHandler):
+    """
+    Get ssh information for user - IP and Port.
+    Port comes from querying the kubernetes API
+    """
+    def get(self):
+
+        try:
+            svc_host = os.environ.get('KUBERNETES_SERVICE_HOST')
+            svc_host_https_port = os.environ.get('KUBERNETES_SERVICE_PORT_HTTPS')
+            namespace = os.environ.get('CHE_WORKSPACE_NAMESPACE') + '-che'
+            che_workspace_id = os.environ.get('CHE_WORKSPACE_ID')
+            sshport_name = 'sshport'
+
+            ip = requests.get('https://api.ipify.org').text
+
+            with open ("/var/run/secrets/kubernetes.io/serviceaccount/token", "r") as t:
+                token=t.read()
+
+            headers = {
+                'Authorization': 'Bearer ' + token,
+            }
+
+            request_string = 'https://' + svc_host + ':' + svc_host_https_port + '/api/v1/namespaces/' + namespace +  '/services/'
+            response = requests.get(request_string, headers=headers, verify=False)
+            data = response.json()
+            endpoints = data['items']
+
+            # Ssh service is running on a seperate container from the user workspace. Query the kubernetes host service to find the container where the nodeport has been set.
+            for endpoint in endpoints:
+                if sshport_name in endpoint['metadata']['name']:
+                    if che_workspace_id == endpoint['metadata']['labels']['che.workspace_id']:
+                        port = endpoint['spec']['ports'][0]['nodePort']
+                        self.finish({'ip': ip, 'port': port})
+
+            self.finish({"status": 500, "message": "failed to get ip and port"})
+        except:
+            self.finish({"status": 500, "message": "failed to get ip and port"})
+
+
+class Presigneds3UrlHandler(IPythonHandler):
+
+    def get(self):
+        # get arguments
+        bucket = dps_bucket_name(self.request.host)
+        key = self.get_argument('key', '')
+        rt_path = os.path.expanduser(self.get_argument('home_path', ''))
+        abs_path = os.path.join(rt_path, key)
+        proxy_ticket = self.get_argument('proxy-ticket','')
+        expiration = self.get_argument('duration','86400') # default 24 hrs
+        che_ws_namespace = os.environ.get('CHE_WORKSPACE_NAMESPACE')
+
+        logging.debug('bucket is '+bucket)     
+        logging.debug('key is '+key)        
+        logging.debug('full path is '+abs_path) 
+
+        # -----------------------
+        # Checking for bad input
+        # -----------------------
+        # if directory, return error - dirs not supported
+        if os.path.isdir(abs_path):
+            self.finish({"status_code": 412, "message": "error", "url": "Presigned S3 links do not support folders"})
+            return
+
+        # check if file in valid folder (under mounted folder path)
+        resp = subprocess.check_output("df -h | grep s3fs | awk '{print $6}'", shell=True).decode('utf-8')
+        mounted_dirs = resp.strip().split('\n')
+        logging.debug(mounted_dirs)
+        if len(mounted_dirs) == 0:
+            self.finish({"status_code": 412, "message": "error",
+                "url": "Presigned S3 links can only be created for files in a mounted org or user folder" +
+                    "\nMounted folders include:\n{}".format(resp)
+                })
+            return
+
+        if not any([mounted_dir in abs_path for mounted_dir in mounted_dirs]):
+            self.finish({"status_code": 412, "message": "error",
+                "url": "Presigned S3 links can only be created for files in a mounted org or user folder" +
+                    "\nMounted folders include:\n{}".format(resp)
+                })
+            return
+
+        # -----------------------
+        # Generate S3 Link
+        # -----------------------
+        # if valid path, get presigned URL
+        # expiration = '43200' # 12 hrs in seconds
+        logging.debug('expiration is {} seconds', expiration)
+
+        url = '{}/api/members/self/presignedUrlS3/{}/{}?exp={}&ws={}'.format(maap_api_url(self.request.host), bucket, key, expiration, che_ws_namespace)
+        headers = {'Accept': 'application/json', 'proxy-ticket': proxy_ticket}
+        r = requests.get(
+            url,
+            headers=headers,
+            verify=False
+        )
+        logging.debug(r.text)
+
+        resp = json.loads(r.text)   
+        self.finish({"status_code":200, "message": "success", "url":resp['url']})
+
+
 def setup_handlers(web_app):
     host_pattern = ".*$"
 
@@ -369,7 +535,7 @@ def setup_handlers(web_app):
 
     # DPS
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "get_example"), RouteHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "test"), RouteTestHandler)])
+    # web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "test"), RouteTestHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "listAlgorithms"), ListAlgorithmsHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "describeAlgorithms"), DescribeAlgorithmsHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getQueues"), GetQueuesHandler)])
@@ -380,16 +546,20 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getJobResult"), GetJobResultHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getJobMetrics"), GetJobMetricsHandler)])
 
-    # MAAPSEC
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "maapsec", "environment"), MaapEnvironmentHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "maapsec", "login"), MaapLoginHandler)])
+    # USER WORKSPACE MANAGEMENT
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "test"), RouteTestHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "injectPublicKey"), InjectKeyHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSSHInfo"), GetSSHInfoHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSignedS3Url"), Presigneds3UrlHandler)])
 
     # EDSC
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getGranules"), GetGranulesHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getQuery"), GetQueryHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc"), IFrameHandler, {'welcome': welcome, 'sites': sites}), (url_path_join(base_url, 'jupyter-server-extension/edsc/proxy'), IFrameProxyHandler)])
 
-
+    # MAAPSEC
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "maapsec", "environment"), MaapEnvironmentHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "maapsec", "login"), MaapLoginHandler)])
 
     web_app.add_handlers(host_pattern, handlers)
     
