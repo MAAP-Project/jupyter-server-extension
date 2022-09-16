@@ -478,9 +478,9 @@ class Presigneds3UrlHandler(IPythonHandler):
         expiration = self.get_argument('duration','86400') # default 24 hrs
         che_ws_namespace = os.environ.get('CHE_WORKSPACE_NAMESPACE')
 
-        logging.debug('bucket is '+bucket)     
-        logging.debug('key is '+key)        
-        logging.debug('full path is '+abs_path) 
+        print('bucket is '+bucket)     
+        print('key is '+key)        
+        print('full path is '+abs_path) 
 
         # -----------------------
         # Checking for bad input
@@ -493,7 +493,7 @@ class Presigneds3UrlHandler(IPythonHandler):
         # check if file in valid folder (under mounted folder path)
         resp = subprocess.check_output("df -h | grep s3fs | awk '{print $6}'", shell=True).decode('utf-8')
         mounted_dirs = resp.strip().split('\n')
-        logging.debug(mounted_dirs)
+        print(mounted_dirs)
         if len(mounted_dirs) == 0:
             self.finish({"status_code": 412, "message": "error",
                 "url": "Presigned S3 links can only be created for files in a mounted org or user folder" +
@@ -513,7 +513,7 @@ class Presigneds3UrlHandler(IPythonHandler):
         # -----------------------
         # if valid path, get presigned URL
         # expiration = '43200' # 12 hrs in seconds
-        logging.debug('expiration is {} seconds', expiration)
+        print('expiration is {} seconds', expiration)
 
         url = '{}/api/members/self/presignedUrlS3/{}/{}?exp={}&ws={}'.format(maap_api_url(self.request.host), bucket, key, expiration, che_ws_namespace)
         headers = {'Accept': 'application/json', 'proxy-ticket': proxy_ticket}
@@ -522,7 +522,7 @@ class Presigneds3UrlHandler(IPythonHandler):
             headers=headers,
             verify=False
         )
-        logging.debug(r.text)
+        print(r.text)
 
         resp = json.loads(r.text)   
         self.finish({"status_code":200, "message": "success", "url":resp['url']})
