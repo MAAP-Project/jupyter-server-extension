@@ -1,32 +1,47 @@
-# jupyter_server_extension
+# Jupyter Server Extension
 
-[![Github Actions Status](https://github.com/github_username/jupyter-server-extension/workflows/Build/badge.svg)](https://github.com/github_username/jupyter-server-extension/actions/workflows/build.yml)
-A JupyterLab extension.
+This is the JupyterLab server-side extension for the custom MAAP JupyterLab frontend extensions. It provides RESTful endpoints to the MAAP API and other services.
 
 This extension is composed of a Python package named `jupyter_server_extension`
 for the server extension and a NPM package named `jupyter-server-extension`
-for the frontend extension.
-
+for the frontend extension.  
+&nbsp;
 ## Requirements
 
-- JupyterLab >= 3.0
-
+- JupyterLab >= 3.4  
+&nbsp;
 ## Install
 
 To install the extension, execute:
 
 ```bash
-pip install jupyter_server_extension
+pip install -i https://test.pypi.org/simple/ jupyter-server-extension
+
+jupyter server extension enable jupyter_server_extension
 ```
 
+
+&nbsp;
 ## Uninstall
 
 To remove the extension, execute:
 
 ```bash
-pip uninstall jupyter_server_extension
+pip uninstall -i https://test.pypi.org/simple/ jupyter-server-extension
+```  
+&nbsp;
+## Usage
+RESTful endpoints are made available to the JupyterLab frontend. In the frontend extension code, users may build the request URL like so:
+```bash
+var requestUrl = new URL(HOST_NAME + 'jupyter-server-extension/listAlgorithms');
 ```
 
+i.e. using localhost as an example: 
+```bash
+http://localhost:8888/jupyter-server-extension/listAlgorithms
+```
+  
+&nbsp;
 ## Troubleshoot
 
 If you are seeing the frontend extension, but it is not working, check
@@ -41,11 +56,9 @@ the frontend extension, check the frontend extension is installed:
 
 ```bash
 jupyter labextension list
-```
-
-## Contributing
-
-### Development install
+```  
+&nbsp;
+## Development install
 
 Note: You will need NodeJS to build the extension package.
 
@@ -81,9 +94,9 @@ By default, the `jlpm build` command generates the source maps for this extensio
 
 ```bash
 jupyter lab build --minimize=False
-```
-
-### Development uninstall
+```  
+&nbsp;
+## Development uninstall
 
 ```bash
 # Server extension must be manually disabled in develop mode
@@ -93,44 +106,7 @@ pip uninstall jupyter_server_extension
 
 In development mode, you will also need to remove the symlink created by `jupyter labextension develop`
 command. To find its location, you can run `jupyter labextension list` to figure out where the `labextensions`
-folder is located. Then you can remove the symlink named `jupyter-server-extension` within that folder.
-
-### Testing the extension
-
-#### Server tests
-
-This extension is using [Pytest](https://docs.pytest.org/) for Python code testing.
-
-Install test dependencies (needed only once):
-
-```sh
-pip install -e ".[test]"
-```
-
-To execute them, run:
-
-```sh
-pytest -vv -r ap --cov jupyter_server_extension
-```
-
-#### Frontend tests
-
-This extension is using [Jest](https://jestjs.io/) for JavaScript code testing.
-
-To execute them, execute:
-
-```sh
-jlpm
-jlpm test
-```
-
-#### Integration tests
-
-This extension uses [Playwright](https://playwright.dev/docs/intro/) for the integration tests (aka user level tests).
-More precisely, the JupyterLab helper [Galata](https://github.com/jupyterlab/jupyterlab/tree/master/galata) is used to handle testing the extension in JupyterLab.
-
-More information are provided within the [ui-tests](./ui-tests/README.md) README.
-
-### Packaging the extension
-
-See [RELEASE](RELEASE.md)
+folder is located. Then you can remove the symlink named `jupyter-server-extension` within that folder.  
+&nbsp;
+## Questions?
+Refer to the [Q&A discussion board](https://github.com/MAAP-Project/jupyter-server-extension/discussions/categories/q-a).
