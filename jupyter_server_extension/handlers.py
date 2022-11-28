@@ -43,6 +43,9 @@ def maap_api_url(host):
 def dps_bucket_name(host):
 	return get_maap_config(host)['workspace_bucket']
 
+def get_kibana_url(host):
+	return get_maap_config(host)['kibana_url']
+
 
 class RouteHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
@@ -84,6 +87,16 @@ class RouteTest1Handler(APIHandler):
 #
 ######################################
 ######################################
+
+class KibanaConfigHandler(APIHandler):
+    # The following decorator should be present on all verb methods (head, get, post,
+    # patch, put, delete, options) to ensure only authorized user can request the
+    # Jupyter server
+    @tornado.web.authenticated
+    def get(self):
+        url = get_kibana_url(maap_api(self.request.host))
+        print(url)
+        self.finish({"KIBANA_URL": url})
 
 class ListAlgorithmsHandler(IPythonHandler):
     @tornado.web.authenticated
@@ -255,7 +268,6 @@ class GetGranulesHandler(IPythonHandler):
         return url_list
 
     def get(self):
-
         maap = MAAP(maap_api(self.request.host))
         cmr_query = self.get_argument('cmr_query', '')
         limit = str(self.get_argument('limit', ''))
@@ -535,7 +547,7 @@ def setup_handlers(web_app):
 
     # DPS
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "get_example"), RouteHandler)])
-    # web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "test"), RouteTestHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getKibanaUrl"), KibanaConfigHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "listAlgorithms"), ListAlgorithmsHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "describeAlgorithms"), DescribeAlgorithmsHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getQueues"), GetQueuesHandler)])
