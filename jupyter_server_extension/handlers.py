@@ -54,8 +54,25 @@ class RouteHandler(APIHandler):
     @tornado.web.authenticated
     def get(self):
         self.finish(json.dumps({
-            "data": "This is /jupyter-server-extension/get_example endpoint!"
+            "data": "This is /jupyter-server-extension/get_example endpoint!!"
         }))
+
+
+class KibanaConfigHandler(APIHandler):
+    # The following decorator should be present on all verb methods (head, get, post,
+    # patch, put, delete, options) to ensure only authorized user can request the
+    # Jupyter server
+    @tornado.web.authenticated
+    def get(self):
+        url = get_kibana_url(maap_api(self.request.host))
+        print(url)
+        self.finish({"KIBANA_URL": url})
+
+
+class MAAPConfigEnvironmentHandler(APIHandler):
+    def get(self):  
+        env = get_maap_config(self.request.host)
+        self.finish(env)
 
 
 class RouteTestHandler(APIHandler):
@@ -88,15 +105,6 @@ class RouteTest1Handler(APIHandler):
 ######################################
 ######################################
 
-class KibanaConfigHandler(APIHandler):
-    # The following decorator should be present on all verb methods (head, get, post,
-    # patch, put, delete, options) to ensure only authorized user can request the
-    # Jupyter server
-    @tornado.web.authenticated
-    def get(self):
-        url = get_kibana_url(maap_api(self.request.host))
-        print(url)
-        self.finish({"KIBANA_URL": url})
 
 class ListAlgorithmsHandler(IPythonHandler):
     @tornado.web.authenticated
@@ -322,65 +330,65 @@ class IFrameProxyHandler(IPythonHandler):
 ######################################
 ######################################
 
-class MaapEnvironmentHandler(IPythonHandler):
-    def get(self, **params):  
-        env = get_maap_config(self.request.host)
-        self.finish(env)
+# class MaapEnvironmentHandler(IPythonHandler):
+#     def get(self, **params):  
+#         env = get_maap_config(self.request.host)
+#         self.finish(env)
 
-class MaapLoginHandler(IPythonHandler):
-    def get(self, **params):
-        try:    
-            param_ticket = self.request.query_arguments['ticket'][0].decode('UTF-8')     
-            param_service = self.request.query_arguments['service'][0].decode('UTF-8') 
-            env = get_maap_config(self.request.host)
-            print("More testing")
-            print(env)
-            auth_server = 'https://{auth_host}/cas'.format(auth_host=env['auth_server'])
+# class MaapLoginHandler(IPythonHandler):
+#     def get(self, **params):
+#         try:    
+#             param_ticket = self.request.query_arguments['ticket'][0].decode('UTF-8')     
+#             param_service = self.request.query_arguments['service'][0].decode('UTF-8') 
+#             env = get_maap_config(self.request.host)
+#             print("More testing")
+#             print(env)
+#             auth_server = 'https://{auth_host}/cas'.format(auth_host=env['auth_server'])
 
-            url = '{base_url}/p3/serviceValidate?ticket={ticket}&service={service}&pgtUrl={base_url}&state='.format(
-                base_url=auth_server, ticket=param_ticket, service=param_service)
+#             url = '{base_url}/p3/serviceValidate?ticket={ticket}&service={service}&pgtUrl={base_url}&state='.format(
+#                 base_url=auth_server, ticket=param_ticket, service=param_service)
 
-            print('auth url: ' + url)
+#             print('auth url: ' + url)
 
-            auth_response = requests.get(
-                url, 
-                verify=False
-            )
+#             auth_response = requests.get(
+#                 url, 
+#                 verify=False
+#             )
 
-            print('auth response:')
-            print(auth_response)
+#             print('auth response:')
+#             print(auth_response)
 
-            xmldump = auth_response.text.strip()
+#             xmldump = auth_response.text.strip()
             
-            print('xmldump:')
-            print(xmldump)
+#             print('xmldump:')
+#             print(xmldump)
 
-            is_valid = True if "cas:authenticationSuccess" in xmldump or \
-                            "cas:proxySuccess" in xmldump else False
+#             is_valid = True if "cas:authenticationSuccess" in xmldump or \
+#                             "cas:proxySuccess" in xmldump else False
 
-            if is_valid:
-                tree = ElementTree(fromstring(xmldump))
-                root = tree.getroot()
+#             if is_valid:
+#                 tree = ElementTree(fromstring(xmldump))
+#                 root = tree.getroot()
 
-                result = {}
-                for i in root.iter():
-                    if "PGTIOU" in i.tag:
-                        continue
-                    result[i.tag.replace("cas:", "").replace("{http://www.yale.edu/tp/cas}", "")] = i.text
+#                 result = {}
+#                 for i in root.iter():
+#                     if "PGTIOU" in i.tag:
+#                         continue
+#                     result[i.tag.replace("cas:", "").replace("{http://www.yale.edu/tp/cas}", "")] = i.text
 
-                self.finish({"status_code": auth_response.status_code, "attributes": json.dumps(result)})
-            else:
-                self.finish({"status_code": 403, "response": xmldump, "json_object": {}})
+#                 self.finish({"status_code": auth_response.status_code, "attributes": json.dumps(result)})
+#             else:
+#                 self.finish({"status_code": 403, "response": xmldump, "json_object": {}})
             
-        except ValueError:
-            self.finish({"status_code": 500, "result": auth_response.reason, "json_object": {}})
+#         except ValueError:
+#             self.finish({"status_code": 500, "result": auth_response.reason, "json_object": {}})
 
-    def _get_cas_attribute_value(self, attributes, attribute_key):
+#     def _get_cas_attribute_value(self, attributes, attribute_key):
 
-        if attributes and "cas:" + attribute_key in attributes:
-            return attributes["cas:" + attribute_key]
-        else:
-            return ''
+#         if attributes and "cas:" + attribute_key in attributes:
+#             return attributes["cas:" + attribute_key]
+#         else:
+#             return ''
 
 
 ######################################
@@ -548,6 +556,7 @@ def setup_handlers(web_app):
     # DPS
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "get_example"), RouteHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getKibanaUrl"), KibanaConfigHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getConfig"), MAAPConfigEnvironmentHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "listAlgorithms"), ListAlgorithmsHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "describeAlgorithms"), DescribeAlgorithmsHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getQueues"), GetQueuesHandler)])
@@ -559,8 +568,8 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getJobMetrics"), GetJobMetricsHandler)])
 
     # MAAPSEC
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "maapsec", "environment"), MaapEnvironmentHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "maapsec", "login"), MaapLoginHandler)])
+    # web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "maapsec", "environment"), MaapEnvironmentHandler)])
+    # web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "maapsec", "login"), MaapLoginHandler)])
 
     # EDSC
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getGranules"), GetGranulesHandler)])
