@@ -10,6 +10,7 @@ jupyter_server_extension/labextension
 package-lock.json
 environments.json
 .env
+maap.cfg
 
 # Integration tests
 ui-tests/test-results/
