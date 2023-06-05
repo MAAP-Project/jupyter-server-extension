@@ -14,6 +14,10 @@
     "preserveWatchOutput": true,
     "resolveJsonModule": true,
     "outDir": "lib",
+    "paths": {
+      "react": [ "./node_modules/@types/react" ],
+      "@lumino/widgets": ["./node_modules/@lumino/widgets"]
+    },
     "rootDir": "src",
     "strict": true,
     "strictNullChecks": true,

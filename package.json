@@ -1,6 +1,6 @@
 {
-  "name": "jupyter-server-extension",
-  "version": "1.0.0",
+  "name": "maap-jupyter-server-extension",
+  "version": "1.0.1",
   "description": "A JupyterLab extension.",
   "keywords": [
     "jupyter",
@@ -43,9 +43,12 @@
     "watch:labextension": "jupyter labextension watch ."
   },
   "dependencies": {
-    "@jupyterlab/application": "^3.6.1",
-    "@jupyterlab/coreutils": "^5.4.4",
-    "@jupyterlab/services": "^6.1.0"
+    "@jupyterlab/application": "^3.6.4",
+    "@jupyterlab/apputils": "^3.6.4",
+    "@jupyterlab/coreutils": "^5.6.4",
+    "@jupyterlab/rendermime-interfaces": "^3.6.4",
+    "@jupyterlab/services": "^6.6.4",
+    "@lumino/widgets": "^1.37.2"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",

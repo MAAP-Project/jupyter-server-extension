@@ -13,6 +13,7 @@ import xml.etree.ElementTree as ET
 import xmltodict
 import logging
 import requests
+import yaml
 
 logging.basicConfig(format='%(asctime)s %(message)s')
 
@@ -548,6 +549,25 @@ class Presigneds3UrlHandler(IPythonHandler):
         self.finish({"status_code":200, "message": "success", "url":resp['url']})
 
 
+class CreateFileHandler(IPythonHandler):
+    def get(self):
+
+        file_name = self.get_argument("fileName")
+        data = self.get_argument("data")
+
+        algo = json.loads(data)
+        print(algo)
+
+        try:
+            print("Attempting to create file.")
+            with open(file_name, 'w') as f:
+                yaml.dump(algo, f)
+                # f.write(yaml.dump(data))
+        except:
+            print("Failed to create file.")
+            self.finish()
+
+
 def setup_handlers(web_app):
     host_pattern = ".*$"
 
@@ -567,20 +587,19 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getJobResult"), GetJobResultHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getJobMetrics"), GetJobMetricsHandler)])
 
-    # MAAPSEC
-    # web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "maapsec", "environment"), MaapEnvironmentHandler)])
-    # web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "maapsec", "login"), MaapLoginHandler)])
-
-    # EDSC
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getGranules"), GetGranulesHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getQuery"), GetQueryHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc"), IFrameHandler, {'welcome': welcome, 'sites': sites}), (url_path_join(base_url, 'jupyter-server-extension/edsc/proxy'), IFrameProxyHandler)])
-
     # USER WORKSPACE MANAGEMENT
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "test"), RouteTestHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "injectPublicKey"), InjectKeyHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSSHInfo"), GetSSHInfoHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSignedS3Url"), Presigneds3UrlHandler)])
+
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "createFile"), CreateFileHandler)])
+
+
+    # EDSC
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getGranules"), GetGranulesHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getQuery"), GetQueryHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc"), IFrameHandler, {'welcome': welcome, 'sites': sites}), (url_path_join(base_url, 'jupyter-server-extension/edsc/proxy'), IFrameProxyHandler)])
 
 
 

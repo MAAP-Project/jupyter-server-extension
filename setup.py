@@ -13,7 +13,7 @@ HERE = Path(__file__).parent.resolve()
 pkg_json = json.loads((HERE / "package.json").read_bytes())
 
 # The name of the project
-name = "jupyter_server_extension"
+name = "maap_jupyter_server_extension"
 
 lab_path = (HERE / pkg_json["jupyterlab"]["outputDir"])
 
