@@ -14,6 +14,7 @@ import xmltodict
 import logging
 import requests
 import yaml
+import time
 
 logging.basicConfig(format='%(asctime)s %(message)s')
 
@@ -240,6 +241,23 @@ class GetJobResultHandler(IPythonHandler):
         except:
             print("Failed job result query.")
             self.finish()
+
+
+class RegisterWithFileHandler(IPythonHandler):
+    def get(self):
+        #maap = MAAP(not_self_signed=False)
+        maap = MAAP(maap_host=maap_api(self.request.host))
+
+        try:
+            config_file = self.get_argument("file")
+            r = maap.register_algorithm_from_yaml_file(config_file)
+            r.raise_for_status()
+            print(r.text)
+            self.finish({"status_code": r.status_code, "response": r.text})
+        except:
+            print("Failed to register.")
+
+
 
 
 
@@ -556,13 +574,16 @@ class CreateFileHandler(IPythonHandler):
         data = self.get_argument("data")
 
         algo = json.loads(data)
-        print(algo)
 
         try:
             print("Attempting to create file.")
             with open(file_name, 'w') as f:
                 yaml.dump(algo, f)
-                # f.write(yaml.dump(data))
+                file_path = os.getcwd() + '/' + file_name
+                print(file_path)
+                while not os.path.exists(file_path):
+                    time.sleep(1)
+                self.finish({"file": file_path})
         except:
             print("Failed to create file.")
             self.finish()
@@ -586,6 +607,8 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getJobStatus"), GetJobStatusHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getJobResult"), GetJobResultHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getJobMetrics"), GetJobMetricsHandler)])
+
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "registerUsingFile"), RegisterWithFileHandler)])
 
     # USER WORKSPACE MANAGEMENT
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "test"), RouteTestHandler)])
