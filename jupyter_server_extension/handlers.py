@@ -192,17 +192,17 @@ class SubmitJobHandler(IPythonHandler):
     def get(self):
         print("JOB SUBMIT")
 
-        #test_request = {"algo_id": "test_algo", "username": "anonymous", "queue": "geospec-job_worker-32gb"}
         kwargs = self.args_to_dict()
         #maap = MAAP(not_self_signed=False)
         maap = MAAP(maap_host=maap_api(self.request.host))
         resp = maap.submitJob(**kwargs)
         #logger.debug(resp)
-        status_code = resp['http_status_code']
-        print("PRINT RESPONSE")
-        print(resp)
+        
+        # status_code = resp['http_status_code']
+        status_code = resp.response_code
+        job_id = resp.id
         if status_code == 200:
-            result = 'JobID is {}'.format(resp['job_id'])
+            result = 'JobID is {}'.format(job_id)
             self.finish({"status_code": status_code, "response": result})
         elif status_code == 400:
             self.finish({"status_code": status_code, "response": resp['result']})
