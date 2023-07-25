@@ -282,7 +282,10 @@ class GetGranulesHandler(IPythonHandler):
         print("cmr_query", cmr_query)
 
         query_string = maap.getCallFromCmrUri(cmr_query, limit=limit)
+        print("graceal1 before eval query string")
         granules = eval(query_string)
+        print(query_string)
+        print("graceal1 back from eval query string")
         query_result = self.printUrls(granules)
         try:
             print("Response is: ", query_result)
@@ -489,6 +492,7 @@ class GetSSHInfoHandler(IPythonHandler):
 class Presigneds3UrlHandler(IPythonHandler):
 
     def get(self):
+        print('graceal1 in Presigneds3UrlHandler function')
         # get arguments
         bucket = dps_bucket_name(self.request.host)
         key = self.get_argument('key', '')
@@ -585,4 +589,3 @@ def setup_handlers(web_app):
 
 
     web_app.add_handlers(host_pattern, handlers)
-    
