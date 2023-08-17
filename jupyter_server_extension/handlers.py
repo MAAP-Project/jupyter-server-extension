@@ -15,6 +15,9 @@ import logging
 import requests
 import yaml
 import time
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logging.basicConfig(format='%(asctime)s %(message)s')
 
@@ -256,9 +259,6 @@ class RegisterWithFileHandler(IPythonHandler):
             self.finish({"status_code": r.status_code, "response": r.text})
         except:
             print("Failed to register.")
-
-
-
 
 
 class GetJobMetricsHandler(IPythonHandler):
@@ -589,6 +589,25 @@ class CreateFileHandler(IPythonHandler):
             self.finish()
 
 
+class BuildOGCPackageHandler(IPythonHandler):
+    def get(self):
+        print("build ogc endpoint")
+        data = self.get_argument("data")
+        try:
+            url = os.environ['SISTER_GITLAB_PROJECT']
+
+            payload={'ref': 'main',
+            'token': os.environ['SISTER_GITLAB_TOKEN'],
+            'variables[APP_PACK_PARAMS]': data}
+            
+            response = requests.request("POST", url, data=payload)
+            res = response.text
+            self.finish({"response": json.dumps(res)})
+        except:
+            print("Failed ogc build request.")
+            self.finish()
+
+
 def setup_handlers(web_app):
     host_pattern = ".*$"
 
@@ -609,6 +628,7 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getJobMetrics"), GetJobMetricsHandler)])
 
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "registerUsingFile"), RegisterWithFileHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "buildOGCPackage"), BuildOGCPackageHandler)])
 
     # USER WORKSPACE MANAGEMENT
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "test"), RouteTestHandler)])
