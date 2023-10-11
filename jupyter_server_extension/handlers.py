@@ -77,15 +77,25 @@ class MAAPConfigEnvironmentHandler(APIHandler):
         self.finish(env)
 
 
-class RouteTestHandler(APIHandler):
+class KibanaConfigHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
     # patch, put, delete, options) to ensure only authorized user can request the
     # Jupyter server
     @tornado.web.authenticated
     def get(self):
-        self.finish(json.dumps({
-            "data": "This is /jupyter-server-extension/test1 endpoint!"
-        }))
+        url = get_kibana_url(maap_api(self.request.host))
+        print(url)
+        self.finish({"KIBANA_URL": url})
+
+
+class WorkspaceContainerHandler(APIHandler):
+    # The following decorator should be present on all verb methods (head, get, post,
+    # patch, put, delete, options) to ensure only authorized user can request the
+    # Jupyter server
+    @tornado.web.authenticated
+    def get(self):
+        path = os.getenv('DOCKERIMAGE_PATH')
+        self.finish({"DOCKERIMAGE_PATH": path})
 
 
 class RouteTest1Handler(APIHandler):
@@ -598,6 +608,7 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "get_example"), RouteHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getKibanaUrl"), KibanaConfigHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getConfig"), MAAPConfigEnvironmentHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getWorkspaceContainer"), WorkspaceContainerHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "listAlgorithms"), ListAlgorithmsHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "describeAlgorithms"), DescribeAlgorithmsHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getQueues"), GetQueuesHandler)])
