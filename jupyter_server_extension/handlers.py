@@ -475,44 +475,59 @@ class InjectKeyHandler(IPythonHandler):
             print("=== No MAAP_PGT found ===")
 
 
-class GetSSHInfoHandler(IPythonHandler):
-    """
-    Get ssh information for user - IP and Port.
-    Port comes from querying the kubernetes API
-    """
+
+class GetProfileInfoHandler(IPythonHandler):
     def get(self):
-
+        #maap = MAAP(not_self_signed=False)
+        maap = MAAP(maap_host=maap_api(self.request.host))
+        print("Attempting to get profile info...")
         try:
-            svc_host = os.environ.get('KUBERNETES_SERVICE_HOST')
-            svc_host_https_port = os.environ.get('KUBERNETES_SERVICE_PORT_HTTPS')
-            namespace = os.environ.get('CHE_WORKSPACE_NAMESPACE') + '-che'
-            che_workspace_id = os.environ.get('CHE_WORKSPACE_ID')
-            sshport_name = 'sshport'
-
-            ip = requests.get('https://api.ipify.org').text
-
-            with open ("/var/run/secrets/kubernetes.io/serviceaccount/token", "r") as t:
-                token=t.read()
-
-            headers = {
-                'Authorization': 'Bearer ' + token,
-            }
-
-            request_string = 'https://' + svc_host + ':' + svc_host_https_port + '/api/v1/namespaces/' + namespace +  '/services/'
-            response = requests.get(request_string, headers=headers, verify=False)
-            data = response.json()
-            endpoints = data['items']
-
-            # Ssh service is running on a seperate container from the user workspace. Query the kubernetes host service to find the container where the nodeport has been set.
-            for endpoint in endpoints:
-                if sshport_name in endpoint['metadata']['name']:
-                    if che_workspace_id == endpoint['metadata']['labels']['che.workspace_id']:
-                        port = endpoint['spec']['ports'][0]['nodePort']
-                        self.finish({'ip': ip, 'port': port})
-
-            self.finish({"status": 500, "message": "failed to get ip and port"})
+            r = maap.profile.account_info()
+            resp = json.loads(r)
+            print(r)
+            self.finish({"status_code": r.status_code, "response": resp})
         except:
-            self.finish({"status": 500, "message": "failed to get ip and port"})
+            self.finish({"status_code": r.status_code, "response": r.text})
+
+
+# class GetSSHInfoHandler(IPythonHandler):
+#     """
+#     Get ssh information for user - IP and Port.
+#     Port comes from querying the kubernetes API
+#     """
+#     def get(self):
+
+#         try:
+#             svc_host = os.environ.get('KUBERNETES_SERVICE_HOST')
+#             svc_host_https_port = os.environ.get('KUBERNETES_SERVICE_PORT_HTTPS')
+#             namespace = os.environ.get('CHE_WORKSPACE_NAMESPACE') + '-che'
+#             che_workspace_id = os.environ.get('CHE_WORKSPACE_ID')
+#             sshport_name = 'sshport'
+
+#             ip = requests.get('https://api.ipify.org').text
+
+#             with open ("/var/run/secrets/kubernetes.io/serviceaccount/token", "r") as t:
+#                 token=t.read()
+
+#             headers = {
+#                 'Authorization': 'Bearer ' + token,
+#             }
+
+#             request_string = 'https://' + svc_host + ':' + svc_host_https_port + '/api/v1/namespaces/' + namespace +  '/services/'
+#             response = requests.get(request_string, headers=headers, verify=False)
+#             data = response.json()
+#             endpoints = data['items']
+
+#             # Ssh service is running on a seperate container from the user workspace. Query the kubernetes host service to find the container where the nodeport has been set.
+#             for endpoint in endpoints:
+#                 if sshport_name in endpoint['metadata']['name']:
+#                     if che_workspace_id == endpoint['metadata']['labels']['che.workspace_id']:
+#                         port = endpoint['spec']['ports'][0]['nodePort']
+#                         self.finish({'ip': ip, 'port': port})
+
+#             self.finish({"status": 500, "message": "failed to get ip and port"})
+#         except:
+#             self.finish({"status": 500, "message": "failed to get ip and port"})
 
 
 class Presigneds3UrlHandler(IPythonHandler):
@@ -605,10 +620,7 @@ def setup_handlers(web_app):
     base_url = web_app.settings["base_url"]
 
 
-    # USER WORKSPACE MANAGEMENT
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "injectPublicKey"), InjectKeyHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSSHInfo"), GetSSHInfoHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSignedS3Url"), Presigneds3UrlHandler)])
+
 
 
     # DPS
@@ -626,6 +638,12 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getJobStatus"), GetJobStatusHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getJobResult"), GetJobResultHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getJobMetrics"), GetJobMetricsHandler)])
+
+    # USER WORKSPACE MANAGEMENT
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "injectPublicKey"), InjectKeyHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getProfileInfo"), GetProfileInfoHandler)])
+    # web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSSHInfo"), GetSSHInfoHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSignedS3Url"), Presigneds3UrlHandler)])
 
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "registerUsingFile"), RegisterWithFileHandler)])
 
