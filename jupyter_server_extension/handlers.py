@@ -428,41 +428,92 @@ class IFrameProxyHandler(IPythonHandler):
 ######################################
 ######################################
 
+# class InjectKeyHandler(IPythonHandler):
+#     def get(self):
+#         public_key = self.get_argument('key', '')
+
+#         if public_key:
+#             print("=== Injecting SSH KEY ===")
+
+#             # Check if .ssh directory exists, if not create it
+#             os.chdir('/projects')
+#             if not os.path.exists(".ssh"):
+#                 os.makedirs(".ssh")
+
+#             # Check if authorized_keys file exits, if not create it
+#             if not os.path.exists(".ssh/authorized_keys"):
+#                 with open(".ssh/authorized_keys", 'w'):
+#                     pass
+
+#             # Check if key already in file
+#             with open('.ssh/authorized_keys', 'r') as f:
+#                 linelist = f.readlines()
+
+#             found = False
+#             for line in linelist:
+#                 if public_key in line:
+#                     print("Key already in authorized_keys")
+#                     found = True
+
+#             # If not in file, inject key into authorized keys
+#             if not found:
+#                 cmd = "echo " + public_key + " >> .ssh/authorized_keys && chmod 700 /projects && chmod 700 .ssh/ && chmod 600 .ssh/authorized_keys"
+#                 print(cmd)
+#                 subprocess.check_output(cmd, shell=True)
+#                 print("=== INJECTED KEY ===")
+#             else:
+#                 print("=== KEY ALREADY PRESENT ===")
+
+#         print("=== Checking for existence of MAAP_PGT ===")
+
+#         proxy_granting_ticket = self.get_argument('proxyGrantingTicket', '')
+
+#         if proxy_granting_ticket:
+#             print("=== MAAP_PGT found. Adding variable to environment ===")
+#             os.environ["MAAP_PGT"] = proxy_granting_ticket
+#         else:
+#             print("=== No MAAP_PGT found ===")
+
+
+
 class InjectKeyHandler(IPythonHandler):
     def get(self):
-        public_key = self.get_argument('key', '')
+        #maap = MAAP(not_self_signed=False)
+        maap = MAAP(maap_host=maap_api(self.request.host))
+        print("Attempting to get key from profile info...")
 
-        if public_key:
-            print("=== Injecting SSH KEY ===")
+        r = maap.profile.account_info()
+        resp = json.loads(r.text)
+        public_ssh_key = resp["public_ssh_key"]
 
-            # Check if .ssh directory exists, if not create it
-            os.chdir('/projects')
-            if not os.path.exists(".ssh"):
-                os.makedirs(".ssh")
+        # Check if .ssh directory exists, if not create it
+        os.chdir('/projects')
+        if not os.path.exists(".ssh"):
+            os.makedirs(".ssh")
 
-            # Check if authorized_keys file exits, if not create it
-            if not os.path.exists(".ssh/authorized_keys"):
-                with open(".ssh/authorized_keys", 'w'):
-                    pass
+        # Check if authorized_keys file exits, if not create it
+        if not os.path.exists(".ssh/authorized_keys"):
+            with open(".ssh/authorized_keys", 'w'):
+                pass
 
-            # Check if key already in file
-            with open('.ssh/authorized_keys', 'r') as f:
-                linelist = f.readlines()
+        # Check if key already in file
+        with open('.ssh/authorized_keys', 'r') as f:
+            linelist = f.readlines()
 
-            found = False
-            for line in linelist:
-                if public_key in line:
-                    print("Key already in authorized_keys")
-                    found = True
-
-            # If not in file, inject key into authorized keys
-            if not found:
-                cmd = "echo " + public_key + " >> .ssh/authorized_keys && chmod 700 /projects && chmod 700 .ssh/ && chmod 600 .ssh/authorized_keys"
-                print(cmd)
-                subprocess.check_output(cmd, shell=True)
-                print("=== INJECTED KEY ===")
-            else:
-                print("=== KEY ALREADY PRESENT ===")
+        found = False
+        for line in linelist:
+            if public_ssh_key in line:
+                print("Key already in authorized_keys")
+                found = True
+        
+        # If not in file, inject key into authorized keys
+        if not found:
+            cmd = "echo " + public_ssh_key + " >> .ssh/authorized_keys && chmod 700 /projects && chmod 700 .ssh/ && chmod 600 .ssh/authorized_keys"
+            print(cmd)
+            subprocess.check_output(cmd, shell=True)
+            print("=== INJECTED KEY ===")
+        else:
+            print("=== KEY ALREADY PRESENT ===")
 
         print("=== Checking for existence of MAAP_PGT ===")
 
@@ -475,59 +526,44 @@ class InjectKeyHandler(IPythonHandler):
             print("=== No MAAP_PGT found ===")
 
 
-
-class GetProfileInfoHandler(IPythonHandler):
+class GetSSHInfoHandler(IPythonHandler):
+    """
+    Get ssh information for user - IP and Port.
+    Port comes from querying the kubernetes API
+    """
     def get(self):
-        #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
-        print("Attempting to get profile info...")
+
         try:
-            r = maap.profile.account_info()
-            resp = json.loads(r)
-            print(r)
-            self.finish({"status_code": r.status_code, "response": resp})
+            svc_host = os.environ.get('KUBERNETES_SERVICE_HOST')
+            svc_host_https_port = os.environ.get('KUBERNETES_SERVICE_PORT_HTTPS')
+            namespace = os.environ.get('CHE_WORKSPACE_NAMESPACE') + '-che'
+            che_workspace_id = os.environ.get('CHE_WORKSPACE_ID')
+            sshport_name = 'sshport'
+
+            ip = requests.get('https://api.ipify.org').text
+
+            with open ("/var/run/secrets/kubernetes.io/serviceaccount/token", "r") as t:
+                token=t.read()
+
+            headers = {
+                'Authorization': 'Bearer ' + token,
+            }
+
+            request_string = 'https://' + svc_host + ':' + svc_host_https_port + '/api/v1/namespaces/' + namespace +  '/services/'
+            response = requests.get(request_string, headers=headers, verify=False)
+            data = response.json()
+            endpoints = data['items']
+
+            # Ssh service is running on a seperate container from the user workspace. Query the kubernetes host service to find the container where the nodeport has been set.
+            for endpoint in endpoints:
+                if sshport_name in endpoint['metadata']['name']:
+                    if che_workspace_id == endpoint['metadata']['labels']['che.workspace_id']:
+                        port = endpoint['spec']['ports'][0]['nodePort']
+                        self.finish({'ip': ip, 'port': port})
+
+            self.finish({"status": 500, "message": "failed to get ip and port"})
         except:
-            self.finish({"status_code": r.status_code, "response": r.text})
-
-
-# class GetSSHInfoHandler(IPythonHandler):
-#     """
-#     Get ssh information for user - IP and Port.
-#     Port comes from querying the kubernetes API
-#     """
-#     def get(self):
-
-#         try:
-#             svc_host = os.environ.get('KUBERNETES_SERVICE_HOST')
-#             svc_host_https_port = os.environ.get('KUBERNETES_SERVICE_PORT_HTTPS')
-#             namespace = os.environ.get('CHE_WORKSPACE_NAMESPACE') + '-che'
-#             che_workspace_id = os.environ.get('CHE_WORKSPACE_ID')
-#             sshport_name = 'sshport'
-
-#             ip = requests.get('https://api.ipify.org').text
-
-#             with open ("/var/run/secrets/kubernetes.io/serviceaccount/token", "r") as t:
-#                 token=t.read()
-
-#             headers = {
-#                 'Authorization': 'Bearer ' + token,
-#             }
-
-#             request_string = 'https://' + svc_host + ':' + svc_host_https_port + '/api/v1/namespaces/' + namespace +  '/services/'
-#             response = requests.get(request_string, headers=headers, verify=False)
-#             data = response.json()
-#             endpoints = data['items']
-
-#             # Ssh service is running on a seperate container from the user workspace. Query the kubernetes host service to find the container where the nodeport has been set.
-#             for endpoint in endpoints:
-#                 if sshport_name in endpoint['metadata']['name']:
-#                     if che_workspace_id == endpoint['metadata']['labels']['che.workspace_id']:
-#                         port = endpoint['spec']['ports'][0]['nodePort']
-#                         self.finish({'ip': ip, 'port': port})
-
-#             self.finish({"status": 500, "message": "failed to get ip and port"})
-#         except:
-#             self.finish({"status": 500, "message": "failed to get ip and port"})
+            self.finish({"status": 500, "message": "failed to get ip and port"})
 
 
 class Presigneds3UrlHandler(IPythonHandler):
@@ -641,8 +677,8 @@ def setup_handlers(web_app):
 
     # USER WORKSPACE MANAGEMENT
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "injectPublicKey"), InjectKeyHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getProfileInfo"), GetProfileInfoHandler)])
-    # web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSSHInfo"), GetSSHInfoHandler)])
+    # web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getProfileInfo"), GetProfileInfoHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSSHInfo"), GetSSHInfoHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSignedS3Url"), Presigneds3UrlHandler)])
 
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "registerUsingFile"), RegisterWithFileHandler)])
