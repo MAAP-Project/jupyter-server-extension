@@ -57,7 +57,7 @@ setup_args = dict(
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     install_requires=[
-        "jupyter_server>=2,<3"
+        "jupyter_server==2.12.5"
     ],
     extras_require={
         "test": [
