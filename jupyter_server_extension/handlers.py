@@ -221,6 +221,37 @@ class SubmitJobHandler(IPythonHandler):
 
 
 
+class CancelJobHandler(IPythonHandler):
+    def get(self):
+        maap = MAAP(maap_host=maap_api(self.request.host))
+        response = ""
+        exception_code = ""
+
+        job_id = self.get_argument("job_id")
+
+        if job_id is None:
+            response = "Failed to cancel job: No job ID submitted."
+            self.finish({"status_code": 400, "response": response})
+        
+        r = maap.cancelJob(job_id)
+        root = ET.fromstring(r)
+        rootTag = root.tag.split("}")[1]
+
+        # Successful cancel will contain a 'StatusInfo' node. 
+        if rootTag == "StatusInfo":
+            response = "Job with ID {} was successfully cancelled.".format(job_id)
+
+        # Unsuccessful cancel will contain an 'ExceptionReport' node.
+        if rootTag == "ExceptionReport":
+            exception_text = root.find('.//{http://www.opengis.net/ows/2.0}ExceptionText').text
+            exception_code = root.find('.//{http://www.opengis.net/ows/2.0}Exception').attrib.get('exceptionCode')
+
+            if exception_text:
+                response = "Failed to cancel job with ID {}: ".format(job_id) + exception_text
+
+        self.finish({"status_code": 200, "response": {"response": response, "exception_code": exception_code}})
+
+
 class GetJobStatusHandler(IPythonHandler):
     def get(self):
         #maap = MAAP(not_self_signed=False)
@@ -626,7 +657,7 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getJobStatus"), GetJobStatusHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getJobResult"), GetJobResultHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "getJobMetrics"), GetJobMetricsHandler)])
-
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "cancelJob"), CancelJobHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "registerUsingFile"), RegisterWithFileHandler)])
 
 
