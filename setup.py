@@ -57,7 +57,16 @@ setup_args = dict(
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     install_requires=[
-        "jupyter_server==2.12.5"
+        "jupyter_server==2.12.5",
+        "jupyter_packaging==0.12.3",
+        "nbformat==5.10.3",
+        "notebook==7.1.2",
+        "pytest==8.1.1",
+        "PyYAML==6.0.1",
+        "Requests==2.31.0",
+        "setuptools==68.2.2",
+        "tornado==6.4",
+        "xmltodict==0.13.0"
     ],
     extras_require={
         "test": [
