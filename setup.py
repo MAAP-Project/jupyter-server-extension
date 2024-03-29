@@ -58,15 +58,16 @@ setup_args = dict(
     packages=setuptools.find_packages(),
     install_requires=[
         "jupyter_server==2.12.5",
-        "jupyter_packaging==0.12.3",
-        "nbformat==5.10.3",
-        "notebook==7.1.2",
-        "pytest==8.1.1",
-        "PyYAML==6.0.1",
-        "Requests==2.31.0",
-        "setuptools==68.2.2",
-        "tornado==6.4",
-        "xmltodict==0.13.0"
+        "jupyter_packaging",
+        "nbformat", #potential problem
+        "notebook",#potential problem
+        "pytest",#potential problem
+        "PyYAML",#potential problem
+        "Requests",
+        "setuptools",
+        "tornado",#potential problem
+        "xmltodict",
+        "maap-py @ git+https://github.com/MAAP-Project/maap-py.git@develop#egg=maapPy"
     ],
     extras_require={
         "test": [
