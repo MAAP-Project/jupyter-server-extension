@@ -58,7 +58,7 @@ setup_args = dict(
     packages=setuptools.find_packages(),
     install_requires=[
         "jupyter_server==2.12.5",
-        "xmltodict"
+        "xmltodict==0.13.0"
     ],
     extras_require={
         "test": [
