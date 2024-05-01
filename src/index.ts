@@ -20,7 +20,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
       })
       .catch(reason => {
         console.error(
-          `The jupyter_server_extension server extension appears to be missing.\n${reason}`
+          `The maap_jupyter_server_extension server extension appears to be missing.\n${reason}`
         );
       });
   }
