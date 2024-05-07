@@ -12,6 +12,7 @@ for the frontend extension.
 |---------|---------|
 | JupyterLab | v4.1.6 |
 | NodeJS | v18 |
+| notebook | v6.4.12 | 
 
 These are the recommended versions. Others may be suitable, but are not actively supported. 
 
