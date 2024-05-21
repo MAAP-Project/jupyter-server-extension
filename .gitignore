@@ -41,3 +41,9 @@ package-lock.json
 maap.cfg
 .yarn/
 .DS_Store
+
+# Testing
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

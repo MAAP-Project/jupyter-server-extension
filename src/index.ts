@@ -12,7 +12,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
   id: 'jupyter-server-extension:plugin',
   autoStart: true,
   activate: (app: JupyterFrontEnd) => {
-    console.log('JupyterLab extension jupyter-server-extension is activated!!');
+    console.log('JupyterLab MAAP DPS Server extension is activated!');
 
     requestAPI<any>('get_example')
       .then(data => {
