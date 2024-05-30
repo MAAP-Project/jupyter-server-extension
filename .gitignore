@@ -37,7 +37,6 @@ lib/
 node_modules/
 *.egg-info/
 *.tsbuildinfo
-package-lock.json
 maap.cfg
 .yarn/
 .DS_Store
