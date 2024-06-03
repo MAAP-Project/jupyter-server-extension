@@ -37,8 +37,8 @@ artifacts = ["maap_jupyter_server_extension/labextension"]
 exclude = [".github", "binder"]
 
 [tool.hatch.build.targets.wheel.shared-data]
-"maap_jupyter_server_extension/labextension" = "share/jupyter/labextensions/jupyter-server-extension"
-"install.json" = "share/jupyter/labextensions/jupyter-server-extension/install.json"
+"maap_jupyter_server_extension/labextension" = "share/jupyter/labextensions/maap-jupyter-server-extension"
+"install.json" = "share/jupyter/labextensions/maap-jupyter-server-extension/install.json"
 "jupyter-config/server-config" = "etc/jupyter/jupyter_server_config.d"
 
 [tool.hatch.build.hooks.version]
@@ -52,6 +52,13 @@ ensured-targets = [
     "maap_jupyter_server_extension/labextension/package.json",
 ]
 skip-if-exists = ["maap_jupyter_server_extension/labextension/static/style.js"]
+
+[tool.hatch.build.targets.wheel]
+artifacts = [
+    "maap_jupyter_server_extension/labextension/static",
+    "maap_jupyter_server_extension/labextension/package.json",
+]
+include = ["/maap_jupyter_server_extension"]
 
 [tool.hatch.build.hooks.jupyter-builder.build-kwargs]
 build_cmd = "build:prod"
