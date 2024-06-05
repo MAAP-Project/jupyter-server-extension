@@ -25,7 +25,7 @@ def _jupyter_labextension_paths():
 
 def _jupyter_server_extension_points():
     return [{
-        "module": "jupyter_server_extension"
+        "module": "maap_jupyter_server_extension"
     }]
 
 
