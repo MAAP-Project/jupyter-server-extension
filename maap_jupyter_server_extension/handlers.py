@@ -613,8 +613,18 @@ class CreateFileHandler(IPythonHandler):
 
         file_name = self.get_argument("fileName")
         data = self.get_argument("data")
+        path_name = self.get_argument("pathName", "")
 
         algo = json.loads(data)
+        if path_name:
+            try:
+                if not os.path.exists(os.getcwd() + '/' + path_name):
+                    print("Attempting to create folder")
+                    os.makedirs(os.getcwd() + '/' + path_name)
+                file_name = path_name + '/' + file_name
+            except:
+                # If failed to create folder, file_path will put the new file in the current directory
+                print("Failed to create folder")
 
         try:
             print("Attempting to create file.")
