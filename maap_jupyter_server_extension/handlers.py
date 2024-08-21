@@ -17,7 +17,6 @@ import yaml
 import time
 
 logging.basicConfig(format='%(asctime)s %(message)s')
-print("graceal1 in handlers.py")
 
 @functools.lru_cache(maxsize=128)
 def get_maap_config(host):
@@ -367,9 +366,6 @@ class GetQueryHandler(IPythonHandler):
 
 class IFrameHandler(IPythonHandler):
     def initialize(self, welcome=None, sites=None):
-        print("graceal1 in initialize with")
-        print(welcome)
-        print(sites)
         self.sites = sites
         self.welcome = welcome
 
