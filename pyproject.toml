@@ -32,7 +32,7 @@ dependencies = [
     "setuptools~=69.0",
     "tornado~=6.4",
     "jupyter-nbextensions-configurator~=0.6.4",
-    "maap-py@git+https://github.com/MAAP-Project/maap-py.git@v4.0.0#egg=maapPy"
+    "maap-py@git+https://github.com/MAAP-Project/maap-py.git@feature/get-username#egg=maapPy"
 ]
 dynamic = ["version", "description", "authors", "urls", "keywords"]
 
