@@ -167,7 +167,6 @@ class GetCMRCollectionsHandler(IPythonHandler):
 
 class ListUserJobsHandler(IPythonHandler):
     def get(self):
-        print("graceal1 in ListUserJobsHandler")
         #maap = MAAP(not_self_signed=False)
         maap = MAAP()
 
