@@ -167,11 +167,12 @@ class GetCMRCollectionsHandler(IPythonHandler):
 
 class ListUserJobsHandler(IPythonHandler):
     def get(self):
+        print("graceal1 in ListUserJobsHandler")
         #maap = MAAP(not_self_signed=False)
         maap = MAAP()
 
         try:
-            r = maap.listJobs(self.get_argument("username"))
+            r = maap.listJobs()
             self.finish({"status_code": r.status_code, "response": r.json()})
         except:
             print("Failed list jobs query.")
