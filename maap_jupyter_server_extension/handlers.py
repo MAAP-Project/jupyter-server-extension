@@ -20,6 +20,8 @@ logging.basicConfig(format='%(asctime)s %(message)s')
 
 @functools.lru_cache(maxsize=128)
 def get_maap_config(host):
+    print("graceal1 host in get_maap_config")
+    print(host)
     print(os.environ)
     path_to_json = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', os.environ['ENVIRONMENTS_FILE_PATH'])
     
@@ -28,7 +30,7 @@ def get_maap_config(host):
 
     match = next((x for x in data if host in x['ade_server']), None)
     maap_config = next((x for x in data if x['default_host'] == True), None) if match is None else match
-    print("Printing from maap config")
+    print("graceal1 Printing from maap config")
     print(maap_config)
     return maap_config
 
