@@ -32,7 +32,8 @@ def get_maap_config(host):
     maap_config = next((x for x in data if x['default_host'] == True), None) if match is None else match
     print("graceal1 Printing from maap config")
     print(maap_config)
-    return maap_config
+    #return maap_config
+    return host
 
 
 def maap_api(host):
