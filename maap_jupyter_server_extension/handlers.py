@@ -15,6 +15,7 @@ import logging
 import requests
 import yaml
 import time
+import urllib.parse
 
 logging.basicConfig(format='%(asctime)s %(message)s')
 print("graceal1 in handlers of jupyter server extension")
@@ -26,23 +27,23 @@ def get_maap_config(host):
     print(os.environ)
     # NOTE need to extract the path from the API 
     # What about a weird case where API host is sent or vice versa and not the other? 
-    # api_host = os.environ.get("MAAP_API_HOST") or "api.maap-project.org"
-    # ade_host = os.environ.get("MAAP_ADE_HOST") or "ade.maap-project.org"
-    # environments_endpoint = "https://" + api_host + "/api/environment/config/"+urllib.parse.quote(urllib.parse.quote("https://", safe=""))+ade_host
-    # print("graceal1 attempting to fetch")
-    # print(environments_endpoint)
-    # r = requests.get(environments_endpoint)
-    # print(r)
-    # r = r.json()
-    # print(r)
+    api_host = os.environ.get("MAAP_API_HOST") or "api.maap-project.org"
+    ade_host = os.environ.get("MAAP_ADE_HOST") or "ade.maap-project.org"
+    environments_endpoint = "https://" + api_host + "/api/environment/config/"+urllib.parse.quote(urllib.parse.quote("https://", safe=""))+ade_host
+    print("graceal1 attempting to fetch")
+    print(environments_endpoint)
+    maap_config = requests.get(environments_endpoint)
+    print(maap_config)
+    maap_config = maap_config.json()
+    print(maap_config)
 
-    path_to_json = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', os.environ['ENVIRONMENTS_FILE_PATH'])
+    # path_to_json = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', os.environ['ENVIRONMENTS_FILE_PATH'])
     
-    with open(path_to_json) as f:
-        data = json.load(f)
+    # with open(path_to_json) as f:
+    #     data = json.load(f)
 
-    match = next((x for x in data if host in x['ade_server']), None)
-    maap_config = next((x for x in data if x['default_host'] == True), None) if match is None else match
+    # match = next((x for x in data if host in x['ade_server']), None)
+    # maap_config = next((x for x in data if x['default_host'] == True), None) if match is None else match
     print("graceal1 Printing from maap config")
     print(maap_config)
     return maap_config
