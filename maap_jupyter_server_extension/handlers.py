@@ -184,10 +184,10 @@ class ListUserJobsHandler(IPythonHandler):
         maap = MAAP(maap_host=maap_api(self.request.host))
 
         try:
-            r = maap.listJobs(self.get_argument("username"))
+            r = maap.listJobs(page_size=200)
             self.finish({"status_code": r.status_code, "response": r.json()})
-        except:
-            print("Failed list jobs query.")
+        except Exception as e:
+            print("Failed list jobs query: {e}")
             self.finish()
 
 
