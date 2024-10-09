@@ -24,14 +24,16 @@ print("graceal1 in handlers of jupyter server extension")
 def get_maap_config(host):
     print("graceal1 in get_maap_config with host")
     print(host)
-    print(os.environ)
     # NOTE need to extract the path from the API 
     # What about a weird case where API host is sent or vice versa and not the other? 
-    api_host = os.environ.get("MAAP_API_HOST") or "api.maap-project.org"
-    ade_host = host or "ade.maap-project.org"
-    environments_endpoint = "https://" + api_host + "/api/environment/config/"+urllib.parse.quote(urllib.parse.quote("https://", safe=""))+ade_host
+    # Need to add error checking
+    api_host = os.getenv("MAAP_API_HOST", "api.maap-project.org")
+    maap_api_config_endpoint = os.getenv("MAAP_API_CONFIG_ENDPOINT", "api/environment/config")
+    ade_host = host if host in ["ade.dit.maap-project.org", "ade.uat.maap-project.org", "ade.maap-project.org"] else os.getenv("MAAP_ADE_HOST", "api.maap-project.org")
+    environments_endpoint = "https://" + api_host + "/" + maap_api_config_endpoint + "/"+urllib.parse.quote(urllib.parse.quote("https://", safe=""))+ade_host
     print("graceal1 attempting to fetch")
     print(environments_endpoint)
+    # need to properly get this request 
     maap_config = requests.get(environments_endpoint)
     print(maap_config)
     maap_config = maap_config.json()
