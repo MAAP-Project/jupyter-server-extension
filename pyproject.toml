@@ -41,9 +41,6 @@ source = "nodejs"
 [tool.hatch.metadata.hooks.nodejs]
 fields = ["description", "authors", "urls"]
 
-[tool.hatch.metadata]
-allow-direct-references = true
-
 [tool.hatch.build.targets.sdist]
 artifacts = ["maap_jupyter_server_extension/labextension"]
 exclude = [".github", "binder"]
