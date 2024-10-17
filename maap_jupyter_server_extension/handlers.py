@@ -29,7 +29,7 @@ def get_maap_config(host):
     # Need to add error checking
     api_host = os.getenv("MAAP_API_HOST", "api.maap-project.org")
     maap_api_config_endpoint = os.getenv("MAAP_API_CONFIG_ENDPOINT", "api/environment/config")
-    ade_host = host if host in ["ade.dit.maap-project.org", "ade.uat.maap-project.org", "ade.maap-project.org"] else os.getenv("MAAP_ADE_HOST", "api.maap-project.org")
+    ade_host = host if host in ["ade.dit.maap-project.org", "ade.uat.maap-project.org", "ade.maap-project.org"] else os.getenv("MAAP_ADE_HOST", "ade.maap-project.org")
     environments_endpoint = "https://" + api_host + "/" + maap_api_config_endpoint + "/"+urllib.parse.quote(urllib.parse.quote("https://", safe=""))+ade_host
     print("graceal1 attempting to fetch")
     print(environments_endpoint)
