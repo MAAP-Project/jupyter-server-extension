@@ -16,11 +16,15 @@ import requests
 import yaml
 import time
 import urllib.parse
+import constants
 
 logging.basicConfig(format='%(asctime)s %(message)s')
 
 @functools.lru_cache(maxsize=128)
 def get_maap_config(host):
+    print("graceal1 in get_maap_config and constants are")
+    print(constants.ADE_OPTIONS)
+    print(constants.API_OPTIONS)
     api_host = os.getenv("MAAP_API_HOST", "api.maap-project.org")
     maap_api_config_endpoint = os.getenv("MAAP_API_CONFIG_ENDPOINT", "api/environment/config")
     ade_host = host if host in ["ade.dit.maap-project.org", "ade.uat.maap-project.org", "ade.maap-project.org"] else os.getenv("MAAP_ADE_HOST", "ade.maap-project.org")
