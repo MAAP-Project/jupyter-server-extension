@@ -16,18 +16,15 @@ import requests
 import yaml
 import time
 import urllib.parse
-import constants
+import maap_jupyter_server_extension.constants as constants
 
 logging.basicConfig(format='%(asctime)s %(message)s')
 
 @functools.lru_cache(maxsize=128)
 def get_maap_config(host):
-    print("graceal1 in get_maap_config and constants are")
-    print(constants.ADE_OPTIONS)
-    print(constants.API_OPTIONS)
-    api_host = os.getenv("MAAP_API_HOST", "api.maap-project.org")
+    api_host = os.getenv("MAAP_API_HOST", constants.DEFAULT_API)
     maap_api_config_endpoint = os.getenv("MAAP_API_CONFIG_ENDPOINT", "api/environment/config")
-    ade_host = host if host in ["ade.dit.maap-project.org", "ade.uat.maap-project.org", "ade.maap-project.org"] else os.getenv("MAAP_ADE_HOST", "ade.maap-project.org")
+    ade_host = host if host in constants.ADE_OPTIONS else os.getenv("MAAP_ADE_HOST", constants.DEFAULT_ADE)
     environments_endpoint = "https://" + api_host + "/" + maap_api_config_endpoint + "/"+urllib.parse.quote(urllib.parse.quote("https://", safe=""))+ade_host
     return requests.get(environments_endpoint).json()
 
