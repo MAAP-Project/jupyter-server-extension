@@ -18,38 +18,14 @@ import time
 import urllib.parse
 
 logging.basicConfig(format='%(asctime)s %(message)s')
-print("graceal1 in handlers of jupyter server extension")
 
 @functools.lru_cache(maxsize=128)
 def get_maap_config(host):
-    print("graceal1 in get_maap_config with host")
-    print(host)
-    # NOTE need to extract the path from the API 
-    # What about a weird case where API host is sent or vice versa and not the other? 
-    # Need to add error checking
     api_host = os.getenv("MAAP_API_HOST", "api.maap-project.org")
     maap_api_config_endpoint = os.getenv("MAAP_API_CONFIG_ENDPOINT", "api/environment/config")
     ade_host = host if host in ["ade.dit.maap-project.org", "ade.uat.maap-project.org", "ade.maap-project.org"] else os.getenv("MAAP_ADE_HOST", "ade.maap-project.org")
     environments_endpoint = "https://" + api_host + "/" + maap_api_config_endpoint + "/"+urllib.parse.quote(urllib.parse.quote("https://", safe=""))+ade_host
-    print("graceal1 attempting to fetch")
-    print(environments_endpoint)
-    # need to properly get this request 
-    maap_config = requests.get(environments_endpoint)
-    print(maap_config)
-    maap_config = maap_config.json()
-    print(maap_config)
-
-    # path_to_json = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', os.environ['ENVIRONMENTS_FILE_PATH'])
-    
-    # with open(path_to_json) as f:
-    #     data = json.load(f)
-
-    # match = next((x for x in data if host in x['ade_server']), None)
-    # maap_config = next((x for x in data if x['default_host'] == True), None) if match is None else match
-    print("graceal1 Printing from maap config")
-    print(maap_config)
-    return maap_config
-
+    return requests.get(environments_endpoint).json()
 
 def maap_api(host):
     return get_maap_config(host)['api_server']
