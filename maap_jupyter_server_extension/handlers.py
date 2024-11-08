@@ -15,23 +15,18 @@ import logging
 import requests
 import yaml
 import time
+import urllib.parse
+import maap_jupyter_server_extension.constants as constants
 
 logging.basicConfig(format='%(asctime)s %(message)s')
 
 @functools.lru_cache(maxsize=128)
 def get_maap_config(host):
-    print(os.environ)
-    path_to_json = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', os.environ['ENVIRONMENTS_FILE_PATH'])
-    
-    with open(path_to_json) as f:
-        data = json.load(f)
-
-    match = next((x for x in data if host in x['ade_server']), None)
-    maap_config = next((x for x in data if x['default_host'] == True), None) if match is None else match
-    print("Printing from maap config")
-    print(maap_config)
-    return maap_config
-
+    api_host = os.getenv("MAAP_API_HOST", constants.DEFAULT_API)
+    maap_api_config_endpoint = os.getenv("MAAP_API_CONFIG_ENDPOINT", "api/environment/config")
+    ade_host = host if host in constants.ADE_OPTIONS else os.getenv("MAAP_ADE_HOST", constants.DEFAULT_ADE)
+    environments_endpoint = "https://" + api_host + "/" + maap_api_config_endpoint + "/"+urllib.parse.quote(urllib.parse.quote("https://", safe=""))+ade_host
+    return requests.get(environments_endpoint).json()
 
 def maap_api(host):
     return get_maap_config(host)['api_server']
@@ -76,18 +71,6 @@ class MAAPConfigEnvironmentHandler(APIHandler):
         env = get_maap_config(self.request.host)
         self.finish(env)
 
-
-class KibanaConfigHandler(APIHandler):
-    # The following decorator should be present on all verb methods (head, get, post,
-    # patch, put, delete, options) to ensure only authorized user can request the
-    # Jupyter server
-    @tornado.web.authenticated
-    def get(self):
-        url = get_kibana_url(maap_api(self.request.host))
-        print(url)
-        self.finish({"KIBANA_URL": url})
-
-
 class WorkspaceContainerHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
     # patch, put, delete, options) to ensure only authorized user can request the
@@ -124,8 +107,7 @@ class ListAlgorithmsHandler(IPythonHandler):
         print("In python list algos handler")
 
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
-        print(maap_api(self.request.host))
+        maap = MAAP()
 
         try:
             print("Making query from backend.")
@@ -139,7 +121,7 @@ class ListAlgorithmsHandler(IPythonHandler):
 class DescribeAlgorithmsHandler(IPythonHandler):
     def get(self):
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
 
         try:
             r = maap.describeAlgorithm(self.get_argument("algo_id"))
@@ -153,7 +135,7 @@ class DescribeAlgorithmsHandler(IPythonHandler):
 class GetQueuesHandler(IPythonHandler):
     def get(self):
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
         try:
             r = maap.getQueues()
             resp = json.loads(r.text)
@@ -167,7 +149,7 @@ class GetQueuesHandler(IPythonHandler):
 class GetCMRCollectionsHandler(IPythonHandler):
     def get(self):
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
 
         try:
             r = maap.searchCollection()
@@ -181,7 +163,7 @@ class GetCMRCollectionsHandler(IPythonHandler):
 class ListUserJobsHandler(IPythonHandler):
     def get(self):
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
 
         try:
             r = maap.listJobs(page_size=200)
@@ -204,7 +186,7 @@ class SubmitJobHandler(IPythonHandler):
 
         kwargs = self.args_to_dict()
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
         resp = maap.submitJob(**kwargs)
         #logger.debug(resp)
         
@@ -223,7 +205,7 @@ class SubmitJobHandler(IPythonHandler):
 
 class CancelJobHandler(IPythonHandler):
     def get(self):
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
         response = ""
         exception_code = ""
 
@@ -255,7 +237,7 @@ class CancelJobHandler(IPythonHandler):
 class GetJobStatusHandler(IPythonHandler):
     def get(self):
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
 
         try:
             r = maap.getJobStatus(self.get_argument("job_id"))
@@ -271,7 +253,7 @@ class GetJobStatusHandler(IPythonHandler):
 class GetJobResultHandler(IPythonHandler):
     def get(self):
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
 
         try:
             r = maap.getJobResult(self.get_argument("job_id"))
@@ -287,7 +269,7 @@ class GetJobResultHandler(IPythonHandler):
 class RegisterWithFileHandler(IPythonHandler):
     def get(self):
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
 
         try:
             config_file = self.get_argument("file")
@@ -305,7 +287,7 @@ class RegisterWithFileHandler(IPythonHandler):
 class GetJobMetricsHandler(IPythonHandler):
     def get(self):
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
 
         try:
             r = maap.getJobMetrics(self.get_argument("job_id"))
@@ -336,7 +318,7 @@ class GetGranulesHandler(IPythonHandler):
         return url_list
 
     def get(self):
-        maap = MAAP(maap_api(self.request.host))
+        maap = MAAP()
         cmr_query = self.get_argument('cmr_query', '')
         limit = str(self.get_argument('limit', ''))
         print("cmr_query", cmr_query)
@@ -353,7 +335,7 @@ class GetGranulesHandler(IPythonHandler):
 
 class GetQueryHandler(IPythonHandler):
     def get(self):
-        maap = MAAP(maap_api(self.request.host))
+        maap = MAAP()
         cmr_query = self.get_argument('cmr_query', '')
         limit = str(self.get_argument('limit', ''))
         query_type = self.get_argument('query_type', 'granule')
