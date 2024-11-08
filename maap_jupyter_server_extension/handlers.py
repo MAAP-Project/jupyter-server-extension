@@ -94,8 +94,9 @@ class WorkspaceContainerHandler(APIHandler):
     # Jupyter server
     @tornado.web.authenticated
     def get(self):
-        path = os.getenv('DOCKERIMAGE_PATH')
-        self.finish({"DOCKERIMAGE_PATH": path})
+        dockerimage_path_default = os.getenv('DOCKERIMAGE_PATH_DEFAULT')
+        dockerimage_path_base_image = os.getenv("DOCKERIMAGE_PATH_BASE_IMAGE")
+        self.finish({"DOCKERIMAGE_PATH_DEFAULT": dockerimage_path_default, "DOCKERIMAGE_PATH_BASE_IMAGE": dockerimage_path_base_image})
 
 
 class RouteTest1Handler(APIHandler):
