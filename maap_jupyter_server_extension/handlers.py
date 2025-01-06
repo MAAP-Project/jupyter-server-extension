@@ -622,6 +622,62 @@ class CreateFileHandler(IPythonHandler):
             print("Failed to create file.")
             self.finish()
 
+class MaapLoginHandler(IPythonHandler):
+    def get(self, **params):
+        print("graceal1 in maap login handler")
+        # try:    
+        #     param_ticket = self.request.query_arguments['ticket'][0].decode('UTF-8')     
+        #     param_service = self.request.query_arguments['service'][0].decode('UTF-8') 
+        #     env = get_maap_config(self.request.host)
+        #     print("More testing")
+        #     print(env)
+        #     auth_server = 'https://{auth_host}/cas'.format(auth_host=env['auth_server'])
+
+        #     url = '{base_url}/p3/serviceValidate?ticket={ticket}&service={service}&pgtUrl={base_url}&state='.format(
+        #         base_url=auth_server, ticket=param_ticket, service=param_service)
+
+        #     print('auth url: ' + url)
+
+        #     auth_response = requests.get(
+        #         url, 
+        #         verify=False
+        #     )
+
+        #     print('auth response:')
+        #     print(auth_response)
+
+        #     xmldump = auth_response.text.strip()
+            
+        #     print('xmldump:')
+        #     print(xmldump)
+
+        #     is_valid = True if "cas:authenticationSuccess" in xmldump or \
+        #                     "cas:proxySuccess" in xmldump else False
+
+        #     if is_valid:
+        #         tree = ElementTree(fromstring(xmldump))
+        #         root = tree.getroot()
+
+        #         result = {}
+        #         for i in root.iter():
+        #             if "PGTIOU" in i.tag:
+        #                 continue
+        #             result[i.tag.replace("cas:", "").replace("{http://www.yale.edu/tp/cas}", "")] = i.text
+
+        #         self.finish({"status_code": auth_response.status_code, "attributes": json.dumps(result)})
+        #     else:
+        #         self.finish({"status_code": 403, "response": xmldump, "json_object": {}})
+            
+        # except ValueError:
+        #     self.finish({"status_code": 500, "result": auth_response.reason, "json_object": {}})
+
+    def _get_cas_attribute_value(self, attributes, attribute_key):
+
+        if attributes and "cas:" + attribute_key in attributes:
+            return attributes["cas:" + attribute_key]
+        else:
+            return ''
+
 
 def setup_handlers(web_app):
     host_pattern = ".*$"
@@ -659,6 +715,7 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getQuery"), GetQueryHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc"), IFrameHandler, {'welcome': welcome, 'sites': sites}), (url_path_join(base_url, 'jupyter-server-extension/edsc/proxy'), IFrameProxyHandler)])
 
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "maapsec", "login"), MaapLoginHandler)])
 
 
     web_app.add_handlers(host_pattern, handlers)
