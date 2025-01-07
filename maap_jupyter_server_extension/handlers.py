@@ -20,6 +20,8 @@ import maap_jupyter_server_extension.constants as constants
 
 logging.basicConfig(format='%(asctime)s %(message)s')
 
+print("graceal1 at the beginning of handlers.py")
+
 @functools.lru_cache(maxsize=128)
 def get_maap_config(host):
     api_host = os.getenv("MAAP_API_HOST", constants.DEFAULT_API)
@@ -625,7 +627,7 @@ class CreateFileHandler(IPythonHandler):
 class TestHandler(IPythonHandler):
     def get(self, **params):
         print("graceal1 in test handler")
-        self.finish()
+        self.finish({"status": 500, "message": "failed to get ip and port"})
 
 class MaapLoginHandler(IPythonHandler):
     def get(self, **params):
