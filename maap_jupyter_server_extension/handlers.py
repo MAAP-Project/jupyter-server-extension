@@ -622,9 +622,15 @@ class CreateFileHandler(IPythonHandler):
             print("Failed to create file.")
             self.finish()
 
+class TestHandler(IPythonHandler):
+    def get(self, **params):
+        print("graceal1 in test handler")
+        self.finish()
+
 class MaapLoginHandler(IPythonHandler):
     def get(self, **params):
         print("graceal1 in maap login handler")
+        self.finish()
         # try:    
         #     param_ticket = self.request.query_arguments['ticket'][0].decode('UTF-8')     
         #     param_service = self.request.query_arguments['service'][0].decode('UTF-8') 
@@ -716,6 +722,7 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc"), IFrameHandler, {'welcome': welcome, 'sites': sites}), (url_path_join(base_url, 'jupyter-server-extension/edsc/proxy'), IFrameProxyHandler)])
 
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "maapsec", "login"), MaapLoginHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "test"), TestHandler)])
 
 
     web_app.add_handlers(host_pattern, handlers)
