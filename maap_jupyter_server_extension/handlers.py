@@ -625,7 +625,7 @@ class CreateFileHandler(IPythonHandler):
             self.finish()
 
 class TestHandler(IPythonHandler):
-    def get(self, **params):
+    def get(self):
         print("graceal1 in test handler")
         self.finish({"status": 500, "message": "failed to get ip and port"})
 
