@@ -208,6 +208,7 @@ class SubmitJobHandler(IPythonHandler):
 
 class CancelJobHandler(IPythonHandler):
     def get(self):
+        print("graceal1 in canceljob handler")
         maap = MAAP()
         response = ""
         exception_code = ""
