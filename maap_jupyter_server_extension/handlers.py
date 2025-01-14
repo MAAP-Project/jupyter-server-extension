@@ -269,6 +269,7 @@ class GetJobResultHandler(IPythonHandler):
 
 class RegisterWithFileHandler(IPythonHandler):
     def get(self):
+        print("graceal1 in get of RegisterWithFileHandler")
         #maap = MAAP(not_self_signed=False)
         maap = MAAP()
 
@@ -280,6 +281,7 @@ class RegisterWithFileHandler(IPythonHandler):
             self.finish({"status_code": r.status_code, "response": r.text})
         except:
             print("Failed to register.")
+            self.finish()
 
 
 
@@ -319,6 +321,7 @@ class GetGranulesHandler(IPythonHandler):
         return url_list
 
     def get(self):
+        print("graceal1 in the get of getGranules")
         maap = MAAP()
         cmr_query = self.get_argument('cmr_query', '')
         limit = str(self.get_argument('limit', ''))
@@ -623,6 +626,12 @@ class CreateFileHandler(IPythonHandler):
             self.finish()
 
 
+class TestHandler(IPythonHandler):
+    def get(self):
+        print("graceal1 in test handler")
+        self.finish()
+
+
 def setup_handlers(web_app):
     host_pattern = ".*$"
 
@@ -655,10 +664,11 @@ def setup_handlers(web_app):
 
 
     # EDSC
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getGranules"), GetGranulesHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getQuery"), GetQueryHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc"), IFrameHandler, {'welcome': welcome, 'sites': sites}), (url_path_join(base_url, 'jupyter-server-extension/edsc/proxy'), IFrameProxyHandler)])
+    #web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getGranules"), GetGranulesHandler)])
+    #web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getQuery"), GetQueryHandler)])
+    #web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc"), IFrameHandler, {'welcome': welcome, 'sites': sites}), (url_path_join(base_url, 'jupyter-server-extension/edsc/proxy'), IFrameProxyHandler)])
 
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "test"), TestHandler)])
 
 
     web_app.add_handlers(host_pattern, handlers)
