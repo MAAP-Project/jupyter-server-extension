@@ -280,6 +280,7 @@ class RegisterWithFileHandler(IPythonHandler):
             self.finish({"status_code": r.status_code, "response": r.text})
         except:
             print("Failed to register.")
+            self.finish()
 
 
 
@@ -622,7 +623,6 @@ class CreateFileHandler(IPythonHandler):
             print("Failed to create file.")
             self.finish()
 
-
 def setup_handlers(web_app):
     host_pattern = ".*$"
 
@@ -657,9 +657,7 @@ def setup_handlers(web_app):
     # EDSC
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getGranules"), GetGranulesHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getQuery"), GetQueryHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc"), IFrameHandler, {'welcome': welcome, 'sites': sites}), (url_path_join(base_url, 'jupyter-server-extension/edsc/proxy'), IFrameProxyHandler)])
-
-
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc"), IFrameHandler, {'welcome': "Hello MAAP user"}), (url_path_join(base_url, 'jupyter-server-extension/edsc/proxy'), IFrameProxyHandler)])
 
     web_app.add_handlers(host_pattern, handlers)
     
