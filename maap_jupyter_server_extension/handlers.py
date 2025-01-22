@@ -20,8 +20,6 @@ import maap_jupyter_server_extension.constants as constants
 
 logging.basicConfig(format='%(asctime)s %(message)s')
 
-print("graceal1 at the beginning of handlers.py")
-
 @functools.lru_cache(maxsize=128)
 def get_maap_config(host):
     api_host = os.getenv("MAAP_API_HOST", constants.DEFAULT_API)
@@ -208,7 +206,6 @@ class SubmitJobHandler(IPythonHandler):
 
 class CancelJobHandler(IPythonHandler):
     def get(self):
-        print("graceal1 in canceljob handler")
         maap = MAAP()
         response = ""
         exception_code = ""
@@ -283,6 +280,7 @@ class RegisterWithFileHandler(IPythonHandler):
             self.finish({"status_code": r.status_code, "response": r.text})
         except:
             print("Failed to register.")
+            self.finish()
 
 
 
@@ -625,11 +623,61 @@ class CreateFileHandler(IPythonHandler):
             print("Failed to create file.")
             self.finish()
 
-class TestHandler(IPythonHandler):
-    def get(self):
-        print("graceal1 in test handler")
-        self.finish({"status": 500, "message": "failed to get ip and port"})
+class MaapLoginHandler(IPythonHandler):
+    def get(self, **params):
+        print("graceal1 in MaapLoginHandler get")
+        try:    
+            param_ticket = self.request.query_arguments['ticket'][0].decode('UTF-8')     
+            param_service = self.request.query_arguments['service'][0].decode('UTF-8') 
+            env = get_maap_config(self.request.host)
+            print("More testing")
+            print(env)
+            auth_server = 'https://{auth_host}/cas'.format(auth_host=env['auth_server'])
 
+            url = '{base_url}/p3/serviceValidate?ticket={ticket}&service={service}&pgtUrl={base_url}&state='.format(
+                base_url=auth_server, ticket=param_ticket, service=param_service)
+
+            print('auth url: ' + url)
+
+            auth_response = requests.get(
+                url, 
+                verify=False
+            )
+
+            print('auth response:')
+            print(auth_response)
+
+            xmldump = auth_response.text.strip()
+            
+            print('xmldump:')
+            print(xmldump)
+
+            is_valid = True if "cas:authenticationSuccess" in xmldump or \
+                            "cas:proxySuccess" in xmldump else False
+
+            if is_valid:
+                tree = ElementTree(fromstring(xmldump))
+                root = tree.getroot()
+
+                result = {}
+                for i in root.iter():
+                    if "PGTIOU" in i.tag:
+                        continue
+                    result[i.tag.replace("cas:", "").replace("{http://www.yale.edu/tp/cas}", "")] = i.text
+
+                self.finish({"status_code": auth_response.status_code, "attributes": json.dumps(result)})
+            else:
+                self.finish({"status_code": 403, "response": xmldump, "json_object": {}})
+            
+        except ValueError:
+            self.finish({"status_code": 500, "result": auth_response.reason, "json_object": {}})
+
+    def _get_cas_attribute_value(self, attributes, attribute_key):
+
+        if attributes and "cas:" + attribute_key in attributes:
+            return attributes["cas:" + attribute_key]
+        else:
+            return ''
 
 def setup_handlers(web_app):
     host_pattern = ".*$"
@@ -665,10 +713,10 @@ def setup_handlers(web_app):
     # EDSC
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getGranules"), GetGranulesHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getQuery"), GetQueryHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc"), IFrameHandler, {'welcome': welcome, 'sites': sites}), (url_path_join(base_url, 'jupyter-server-extension/edsc/proxy'), IFrameProxyHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc"), IFrameHandler, {'welcome': "Hello MAAP user"}), (url_path_join(base_url, 'jupyter-server-extension/edsc/proxy'), IFrameProxyHandler)])
 
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "test"), TestHandler)])
-
+    # MAAPSEC
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "maapsec", "login"), MaapLoginHandler)])
 
     web_app.add_handlers(host_pattern, handlers)
     
