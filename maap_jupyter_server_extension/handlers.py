@@ -16,6 +16,7 @@ import requests
 import yaml
 import time
 import urllib.parse
+import re
 import maap_jupyter_server_extension.constants as constants
 
 logging.basicConfig(format='%(asctime)s %(message)s')
@@ -501,6 +502,11 @@ class GetSSHInfoHandler(IPythonHandler):
             svc_host = os.environ.get('KUBERNETES_SERVICE_HOST')
             svc_host_https_port = os.environ.get('KUBERNETES_SERVICE_PORT_HTTPS')
             namespace = os.environ.get('CHE_WORKSPACE_NAMESPACE') + '-che'
+		
+	    # Replicate Che's namespace converter policy
+            # by substituting any non-alphanumeric characters with hyphens.
+            namespace = re.sub(r"[^0-9a-zA-Z-]+", "-", namespace)
+		
             che_workspace_id = os.environ.get('CHE_WORKSPACE_ID')
             sshport_name = 'sshport'
 
