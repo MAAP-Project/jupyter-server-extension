@@ -491,7 +491,6 @@ class InjectKeyHandler(IPythonHandler):
             print("=== No MAAP_PGT found ===")
 
 
-
 class GetSSHInfoHandler(IPythonHandler):
     """
     Get ssh information for user - IP and Port.
