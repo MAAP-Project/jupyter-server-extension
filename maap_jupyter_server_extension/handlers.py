@@ -446,12 +446,6 @@ class IFrameProxyHandler(IPythonHandler):
 
 class InjectKeyHandler(IPythonHandler):
     def get(self):
-        os.chdir('/projects')
-        #os.chdir('/Users/graceal/documents/maap/extensions/jupyter-server-extension/projects')
-        with open("jupyterServerExtensionLogs.txt", 'w') as f:
-            f.write("public key is \n")
-            f.write(self.get_argument('key', ''))
-            f.write("\n")
         public_key = self.get_argument('key', '')
 
         if public_key:
@@ -466,56 +460,22 @@ class InjectKeyHandler(IPythonHandler):
             if not os.path.exists(".ssh/authorized_keys"):
                 with open(".ssh/authorized_keys", 'w'):
                     pass
-            with open("jupyterServerExtensionLogs.txt", 'a') as f:
-                f.write("just made sure .ssh authorized_keys exists \n")
 
             # Check if key already in file
             with open('.ssh/authorized_keys', 'r') as f:
                 linelist = f.readlines()
-            
-            with open("jupyterServerExtensionLogs.txt", 'a') as f:
-                f.write("linelist from authorized keys ")
-                f.write(linelist)
-                f.write("\n")
 
             found = False
             for line in linelist:
                 if public_key in line:
                     print("Key already in authorized_keys")
                     found = True
-            with open("jupyterServerExtensionLogs.txt", 'a') as f:
-                f.write("key found in linelist?")
-                f.write(found)
-                f.write("\n")
 
             # If not in file, inject key into authorized keys
             if not found:
-                #cmd = "echo " + public_key + " >> .ssh/authorized_keys && chmod 700 /projects && chmod 700 .ssh/ && chmod 600 .ssh/authorized_keys"
-                cmd1 = "echo " + public_key + " >> .ssh/authorized_keys"
-                subprocess.check_output(cmd1, shell=True)
-                with open("jupyterServerExtensionLogs.txt", 'a') as f:
-                    f.write("ran command 1 ")
-                
-                cmd2 = "chmod 700 /projects"
-                subprocess.check_output(cmd2, shell=True)
-                with open("jupyterServerExtensionLogs.txt", 'a') as f:
-                    f.write(" ran command 2 ")
-
-                cmd3 = "chmod 700 .ssh/"
-                subprocess.check_output(cmd3, shell=True)
-                with open("jupyterServerExtensionLogs.txt", 'a') as f:
-                    f.write(" ran command 3 ")
-
-                cmd4 = "chmod 600 .ssh/authorized_keys"
-                subprocess.check_output(cmd4, shell=True)
-                with open("jupyterServerExtensionLogs.txt", 'a') as f:
-                    f.write(" ran command 4 ")
-                #print(cmd)
-                #subprocess.check_output(cmd, shell=True)
-
-                with open("jupyterServerExtensionLogs.txt", 'a') as f:
-                    f.write("done running commands ")
-                    f.write("\n")
+                cmd = "echo " + public_key + " >> .ssh/authorized_keys && chmod 700 /projects && chmod 700 .ssh/ && chmod 600 .ssh/authorized_keys"
+                print(cmd)
+                subprocess.check_output(cmd, shell=True)
                 print("=== INJECTED KEY ===")
             else:
                 print("=== KEY ALREADY PRESENT ===")
@@ -529,11 +489,7 @@ class InjectKeyHandler(IPythonHandler):
             os.environ["MAAP_PGT"] = proxy_granting_ticket
         else:
             print("=== No MAAP_PGT found ===")
-        
-        with open("jupyterServerExtensionLogs.txt", 'a') as f:
-            f.write("proxy_granting_ticket is ")
-            f.write(proxy_granting_ticket)
-            f.close()
+
 
 
 class GetSSHInfoHandler(IPythonHandler):
@@ -676,8 +632,10 @@ class CreateFileHandler(IPythonHandler):
 
 class AccountInfoHandler(IPythonHandler):
     def get(self):
+        proxy_granting_ticket = self.get_argument('proxyGrantingTicket', '')
+        
         maap = MAAP()
-        profile = maap.profile.account_info()
+        profile = maap.profile.account_info(proxy_ticket = proxy_granting_ticket)
         self.finish({"profile": profile})
 
 def setup_handlers(web_app):
