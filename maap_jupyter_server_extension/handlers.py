@@ -629,6 +629,14 @@ class CreateFileHandler(IPythonHandler):
             print("Failed to create file.")
             self.finish()
 
+class AccountInfoHandler(IPythonHandler):
+    def get(self):
+        proxy_granting_ticket = self.get_argument('proxyGrantingTicket', '')
+        
+        maap = MAAP()
+        profile = maap.profile.account_info(proxy_ticket = proxy_granting_ticket)
+        self.finish({"profile": profile})
+
 def setup_handlers(web_app):
     host_pattern = ".*$"
 
@@ -639,6 +647,7 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "injectPublicKey"), InjectKeyHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSSHInfo"), GetSSHInfoHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSignedS3Url"), Presigneds3UrlHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getAccountInfo"), AccountInfoHandler)])
 
 
     # DPS
