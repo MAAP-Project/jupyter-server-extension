@@ -15,23 +15,19 @@ import logging
 import requests
 import yaml
 import time
+import urllib.parse
+import re
+import maap_jupyter_server_extension.constants as constants
 
 logging.basicConfig(format='%(asctime)s %(message)s')
 
 @functools.lru_cache(maxsize=128)
 def get_maap_config(host):
-    print(os.environ)
-    path_to_json = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', os.environ['ENVIRONMENTS_FILE_PATH'])
-    
-    with open(path_to_json) as f:
-        data = json.load(f)
-
-    match = next((x for x in data if host in x['ade_server']), None)
-    maap_config = next((x for x in data if x['default_host'] == True), None) if match is None else match
-    print("Printing from maap config")
-    print(maap_config)
-    return maap_config
-
+    api_host = os.getenv("MAAP_API_HOST", constants.DEFAULT_API)
+    maap_api_config_endpoint = os.getenv("MAAP_API_CONFIG_ENDPOINT", "api/environment/config")
+    ade_host = host if host in constants.ADE_OPTIONS else os.getenv("MAAP_ADE_HOST", constants.DEFAULT_ADE)
+    environments_endpoint = "https://" + api_host + "/" + maap_api_config_endpoint + "/"+urllib.parse.quote(urllib.parse.quote("https://", safe=""))+ade_host
+    return requests.get(environments_endpoint).json()
 
 def maap_api(host):
     return get_maap_config(host)['api_server']
@@ -76,26 +72,15 @@ class MAAPConfigEnvironmentHandler(APIHandler):
         env = get_maap_config(self.request.host)
         self.finish(env)
 
-
-class KibanaConfigHandler(APIHandler):
-    # The following decorator should be present on all verb methods (head, get, post,
-    # patch, put, delete, options) to ensure only authorized user can request the
-    # Jupyter server
-    @tornado.web.authenticated
-    def get(self):
-        url = get_kibana_url(maap_api(self.request.host))
-        print(url)
-        self.finish({"KIBANA_URL": url})
-
-
 class WorkspaceContainerHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
     # patch, put, delete, options) to ensure only authorized user can request the
     # Jupyter server
     @tornado.web.authenticated
     def get(self):
-        path = os.getenv('DOCKERIMAGE_PATH')
-        self.finish({"DOCKERIMAGE_PATH": path})
+        dockerimage_path_default = os.getenv('DOCKERIMAGE_PATH_DEFAULT')
+        dockerimage_path_base_image = os.getenv("DOCKERIMAGE_PATH_BASE_IMAGE")
+        self.finish({"DOCKERIMAGE_PATH_DEFAULT": dockerimage_path_default, "DOCKERIMAGE_PATH_BASE_IMAGE": dockerimage_path_base_image})
 
 
 class RouteTest1Handler(APIHandler):
@@ -124,8 +109,7 @@ class ListAlgorithmsHandler(IPythonHandler):
         print("In python list algos handler")
 
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
-        print(maap_api(self.request.host))
+        maap = MAAP()
 
         try:
             print("Making query from backend.")
@@ -139,7 +123,7 @@ class ListAlgorithmsHandler(IPythonHandler):
 class DescribeAlgorithmsHandler(IPythonHandler):
     def get(self):
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
 
         try:
             r = maap.describeAlgorithm(self.get_argument("algo_id"))
@@ -153,7 +137,7 @@ class DescribeAlgorithmsHandler(IPythonHandler):
 class GetQueuesHandler(IPythonHandler):
     def get(self):
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
         try:
             r = maap.getQueues()
             resp = json.loads(r.text)
@@ -167,7 +151,7 @@ class GetQueuesHandler(IPythonHandler):
 class GetCMRCollectionsHandler(IPythonHandler):
     def get(self):
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
 
         try:
             r = maap.searchCollection()
@@ -181,13 +165,13 @@ class GetCMRCollectionsHandler(IPythonHandler):
 class ListUserJobsHandler(IPythonHandler):
     def get(self):
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
 
         try:
-            r = maap.listJobs(self.get_argument("username"))
+            r = maap.listJobs(page_size=200)
             self.finish({"status_code": r.status_code, "response": r.json()})
-        except:
-            print("Failed list jobs query.")
+        except Exception as e:
+            print("Failed list jobs query: {e}")
             self.finish()
 
 
@@ -204,7 +188,7 @@ class SubmitJobHandler(IPythonHandler):
 
         kwargs = self.args_to_dict()
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
         resp = maap.submitJob(**kwargs)
         #logger.debug(resp)
         
@@ -223,7 +207,7 @@ class SubmitJobHandler(IPythonHandler):
 
 class CancelJobHandler(IPythonHandler):
     def get(self):
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
         response = ""
         exception_code = ""
 
@@ -255,7 +239,7 @@ class CancelJobHandler(IPythonHandler):
 class GetJobStatusHandler(IPythonHandler):
     def get(self):
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
 
         try:
             r = maap.getJobStatus(self.get_argument("job_id"))
@@ -271,7 +255,7 @@ class GetJobStatusHandler(IPythonHandler):
 class GetJobResultHandler(IPythonHandler):
     def get(self):
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
 
         try:
             r = maap.getJobResult(self.get_argument("job_id"))
@@ -287,7 +271,7 @@ class GetJobResultHandler(IPythonHandler):
 class RegisterWithFileHandler(IPythonHandler):
     def get(self):
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
 
         try:
             config_file = self.get_argument("file")
@@ -297,6 +281,7 @@ class RegisterWithFileHandler(IPythonHandler):
             self.finish({"status_code": r.status_code, "response": r.text})
         except:
             print("Failed to register.")
+            self.finish()
 
 
 
@@ -305,7 +290,7 @@ class RegisterWithFileHandler(IPythonHandler):
 class GetJobMetricsHandler(IPythonHandler):
     def get(self):
         #maap = MAAP(not_self_signed=False)
-        maap = MAAP(maap_host=maap_api(self.request.host))
+        maap = MAAP()
 
         try:
             r = maap.getJobMetrics(self.get_argument("job_id"))
@@ -336,7 +321,7 @@ class GetGranulesHandler(IPythonHandler):
         return url_list
 
     def get(self):
-        maap = MAAP(maap_api(self.request.host))
+        maap = MAAP()
         cmr_query = self.get_argument('cmr_query', '')
         limit = str(self.get_argument('limit', ''))
         print("cmr_query", cmr_query)
@@ -353,7 +338,7 @@ class GetGranulesHandler(IPythonHandler):
 
 class GetQueryHandler(IPythonHandler):
     def get(self):
-        maap = MAAP(maap_api(self.request.host))
+        maap = MAAP()
         cmr_query = self.get_argument('cmr_query', '')
         limit = str(self.get_argument('limit', ''))
         query_type = self.get_argument('query_type', 'granule')
@@ -517,6 +502,11 @@ class GetSSHInfoHandler(IPythonHandler):
             svc_host = os.environ.get('KUBERNETES_SERVICE_HOST')
             svc_host_https_port = os.environ.get('KUBERNETES_SERVICE_PORT_HTTPS')
             namespace = os.environ.get('CHE_WORKSPACE_NAMESPACE') + '-che'
+		
+	    # Replicate Che's namespace converter policy
+            # by substituting any non-alphanumeric characters with hyphens.
+            namespace = re.sub(r"[^0-9a-zA-Z-]+", "-", namespace)
+		
             che_workspace_id = os.environ.get('CHE_WORKSPACE_ID')
             sshport_name = 'sshport'
 
@@ -613,8 +603,18 @@ class CreateFileHandler(IPythonHandler):
 
         file_name = self.get_argument("fileName")
         data = self.get_argument("data")
+        path_name = self.get_argument("pathName", "")
 
         algo = json.loads(data)
+        if path_name:
+            try:
+                if not os.path.exists(os.getcwd() + '/' + path_name):
+                    print("Attempting to create folder")
+                    os.makedirs(os.getcwd() + '/' + path_name)
+                file_name = path_name + '/' + file_name
+            except:
+                # If failed to create folder, file_path will put the new file in the current directory
+                print("Failed to create folder")
 
         try:
             print("Attempting to create file.")
@@ -629,6 +629,13 @@ class CreateFileHandler(IPythonHandler):
             print("Failed to create file.")
             self.finish()
 
+class AccountInfoHandler(IPythonHandler):
+    def get(self):
+        proxy_granting_ticket = self.get_argument('proxyGrantingTicket', '')
+        
+        maap = MAAP()
+        profile = maap.profile.account_info(proxy_ticket = proxy_granting_ticket)
+        self.finish({"profile": profile})
 
 def setup_handlers(web_app):
     host_pattern = ".*$"
@@ -640,6 +647,7 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "injectPublicKey"), InjectKeyHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSSHInfo"), GetSSHInfoHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSignedS3Url"), Presigneds3UrlHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getAccountInfo"), AccountInfoHandler)])
 
 
     # DPS
@@ -664,9 +672,7 @@ def setup_handlers(web_app):
     # EDSC
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getGranules"), GetGranulesHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc", "getQuery"), GetQueryHandler)])
-    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc"), IFrameHandler, {'welcome': welcome, 'sites': sites}), (url_path_join(base_url, 'jupyter-server-extension/edsc/proxy'), IFrameProxyHandler)])
-
-
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "edsc"), IFrameHandler, {'welcome': "Hello MAAP user"}), (url_path_join(base_url, 'jupyter-server-extension/edsc/proxy'), IFrameProxyHandler)])
 
     web_app.add_handlers(host_pattern, handlers)
     
