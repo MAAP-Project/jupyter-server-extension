@@ -480,6 +480,8 @@ class InjectKeyHandler(IPythonHandler):
             else:
                 print("=== KEY ALREADY PRESENT ===")
 
+class InjectPGTHandler(IPythonHandler):
+    def get(self):
         print("=== Checking for existence of MAAP_PGT ===")
 
         proxy_granting_ticket = self.get_argument('proxyGrantingTicket', '')
@@ -645,6 +647,7 @@ def setup_handlers(web_app):
 
     # USER WORKSPACE MANAGEMENT
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "injectPublicKey"), InjectKeyHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "injectPGT"), InjectPGTHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSSHInfo"), GetSSHInfoHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSignedS3Url"), Presigneds3UrlHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getAccountInfo"), AccountInfoHandler)])
