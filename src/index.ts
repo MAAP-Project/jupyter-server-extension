@@ -6,15 +6,16 @@ import {
 import { requestAPI } from './handler';
 
 /**
- * Initialization data for the jupyter-server-extension extension.
+ * Initialization data for the maap-jupyter-server-extension extension.
  */
 const plugin: JupyterFrontEndPlugin<void> = {
-  id: 'jupyter-server-extension:plugin',
+  id: 'maap-jupyter-server-extension:plugin',
+  description: 'A JupyterLab extension.',
   autoStart: true,
   activate: (app: JupyterFrontEnd) => {
-    console.log('JupyterLab MAAP DPS Server extension is activated!');
+    console.log('JupyterLab extension maap-jupyter-server-extension is activated!');
 
-    requestAPI<any>('get_example')
+    requestAPI<any>('get-example')
       .then(data => {
         console.log(data);
       })

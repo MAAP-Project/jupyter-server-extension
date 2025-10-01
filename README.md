@@ -1,30 +1,23 @@
-# Jupyter Server Extension
+# maap_jupyter_server_extension
 
-This is the JupyterLab server-side extension for the custom MAAP JupyterLab frontend extensions. It provides RESTful endpoints to the MAAP API and other services.
+[![Github Actions Status](/workflows/Build/badge.svg)](/actions/workflows/build.yml)
+
+A JupyterLab extension.
 
 This extension is composed of a Python package named `maap_jupyter_server_extension`
 for the server extension and a NPM package named `maap-jupyter-server-extension`
-for the frontend extension.  
+for the frontend extension.
 
 ## Requirements
 
-| Package | Version |
-|---------|---------|
-| JupyterLab | v4.1.6 |
-| NodeJS | v18.20.0 |
-| Python | >= v3.8 |
-| notebook | v6.4.12 | 
-
-These are the recommended versions. Others may be suitable, but are not actively supported. 
+- JupyterLab >= 4.0.0
 
 ## Install
 
 To install the extension, execute:
 
 ```bash
-pip install -i https://test.pypi.org/simple/ maap-jupyter-server-extension
-
-jupyter server extension enable jupyter_server_extension
+pip install maap_jupyter_server_extension
 ```
 
 ## Uninstall
@@ -32,20 +25,9 @@ jupyter server extension enable jupyter_server_extension
 To remove the extension, execute:
 
 ```bash
-pip uninstall -i https://test.pypi.org/simple/ maap-jupyter-server-extension
-```  
-
-## Usage
-RESTful endpoints are made available to the JupyterLab frontend. In the frontend extension code, users may build the request URL like so:
-```bash
-var requestUrl = new URL(HOST_NAME + 'jupyter-server-extension/listAlgorithms');
+pip uninstall maap_jupyter_server_extension
 ```
 
-i.e. using localhost as an example: 
-```bash
-http://localhost:8888/jupyter-server-extension/listAlgorithms
-```
-  
 ## Troubleshoot
 
 If you are seeing the frontend extension, but it is not working, check
@@ -60,9 +42,11 @@ the frontend extension, check the frontend extension is installed:
 
 ```bash
 jupyter labextension list
-```  
+```
 
-## Development install
+## Contributing
+
+### Development install
 
 Note: You will need NodeJS to build the extension package.
 
@@ -72,11 +56,9 @@ The `jlpm` command is JupyterLab's pinned version of
 
 ```bash
 # Clone the repo to your local environment
-# Change directory to the jupyter_server_extension directory
-# Install dependencies
-jlpm install
+# Change directory to the maap_jupyter_server_extension directory
 # Install package in development mode
-pip install -e .
+pip install -e ".[test]"
 # Link your development version of the extension with JupyterLab
 jupyter labextension develop . --overwrite
 # Server extension must be manually installed in develop mode
@@ -100,9 +82,9 @@ By default, the `jlpm build` command generates the source maps for this extensio
 
 ```bash
 jupyter lab build --minimize=False
-```  
+```
 
-## Development uninstall
+### Development uninstall
 
 ```bash
 # Server extension must be manually disabled in develop mode
@@ -112,25 +94,46 @@ pip uninstall maap_jupyter_server_extension
 
 In development mode, you will also need to remove the symlink created by `jupyter labextension develop`
 command. To find its location, you can run `jupyter labextension list` to figure out where the `labextensions`
-folder is located. Then you can remove the symlink named `maap-jupyter-server-extension` within that folder.  
+folder is located. Then you can remove the symlink named `maap-jupyter-server-extension` within that folder.
 
-## Testing
+### Testing the extension
 
-Playwright is the testing framework used. When testing locally, use the following command to start the jupyter server and run the tests:
+#### Server tests
+
+This extension is using [Pytest](https://docs.pytest.org/) for Python code testing.
+
+Install test dependencies (needed only once):
+
+```sh
+pip install -e ".[test]"
+# Each time you install the Python package, you need to restore the front-end extension link
+jupyter labextension develop . --overwrite
 ```
-jlpm run start & jlpm run test
+
+To execute them, run:
+
+```sh
+pytest -vv -r ap --cov maap_jupyter_server_extension
 ```
 
-To test using the interactive UI, run the following instead:
+#### Frontend tests
 
-```
-jlpm run start & jlpm run test --ui
+This extension is using [Jest](https://jestjs.io/) for JavaScript code testing.
+
+To execute them, execute:
+
+```sh
+jlpm
+jlpm test
 ```
 
-## Release
+#### Integration tests
+
+This extension uses [Playwright](https://playwright.dev/docs/intro) for the integration tests (aka user level tests).
+More precisely, the JupyterLab helper [Galata](https://github.com/jupyterlab/jupyterlab/tree/master/galata) is used to handle testing the extension in JupyterLab.
+
+More information are provided within the [ui-tests](./ui-tests/README.md) README.
+
+### Packaging the extension
 
 See [RELEASE](RELEASE.md)
-
-## Contribute
-
-See [CONTRIBUTING](CONTRIBUTING.md)
