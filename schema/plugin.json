@@ -1,0 +1,15 @@
+{
+    "jupyter.lab.setting-icon": "ui-components:settings",
+    "title": "MAAP Settings",
+    "description": "Settings for MAAP Jupyter extensions.",
+    "type": "object",
+    "properties": {
+      "maapApiUrl": {
+        "type": "string",
+        "title": "MAAP API URL",
+        "default": "none",
+        "description": "URL for the MAAP API backend."
+      }
+    }
+  }
+  

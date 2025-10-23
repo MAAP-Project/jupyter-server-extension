@@ -4,6 +4,7 @@ import re
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
 import tornado
+from .config import MaapServerConfig
 
 def is_valid_env_var_value(value: str) -> bool:
     """
@@ -94,7 +95,7 @@ class GetTokenHandler(APIHandler):
 
 class SetTokenHandler(APIHandler):
     """
-        POST /maap-jupyter-server-extension/get-token
+        POST /maap-jupyter-server-extension/set-token
 
         This endpoint expects a JSON payload with a 'token' field. If the token value is valid,
         it is set to the'MAAP_PGT_TOKEN' environment variable.

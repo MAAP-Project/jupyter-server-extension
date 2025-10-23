@@ -1,0 +1,26 @@
+algorithm_name: sardem-sarsen-mlucas
+algorithm_version: nasa-ogc
+algorithm_description: sardem-sarsen
+code_repository: https://github.com/MAAP-Project/sardem-sarsen.git
+run_command: sardem-sarsen/sardem-sarsen.sh
+build_command: sardem-sarsen/nasa/build-env.sh
+ram_min: 5
+cores_min: 1
+base_container_url: mas.dit.maap-project.org/root/maap-workspaces/custom_images/maap_base:develop
+inputs:
+  - name: sentinel_granule
+    label: sentinel_granule
+    doc: sentinel granule
+    type: Directory
+  - name: stac_asset_name
+    label: stac_asset_name
+    doc: stac asset name
+    type: string?
+  - name: bbox
+    label: bbox
+    doc: bbox
+    type: string
+outputs:
+  - name: out
+    type: Directory
+outdir_max: 20
