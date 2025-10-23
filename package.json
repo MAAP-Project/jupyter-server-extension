@@ -108,6 +108,7 @@
             }
         },
         "extension": true,
+        "schemaDir": "schema",
         "outputDir": "maap_jupyter_server_extension/labextension"
     },
     "eslintIgnore": [
