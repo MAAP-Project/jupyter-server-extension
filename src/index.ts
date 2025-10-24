@@ -2,32 +2,30 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
+import { PageConfig } from '@jupyterlab/coreutils';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
-/**
- * Initialization data for the maap-jupyter-server-extension extension.
- */
+const MAAP_JUPYTER_SERVER_EXTENSION_ID = 'maap-jupyter-server-extension:plugin';
+
 const plugin: JupyterFrontEndPlugin<void> = {
-  id: 'maap-jupyter-server-extension:plugin',
-  description: 'A JupyterLab extension.',
+  id: MAAP_JUPYTER_SERVER_EXTENSION_ID,
+  description: 'MAAP Jupyter Server Extension',
   autoStart: true,
   requires: [ISettingRegistry],
   activate: async (app: JupyterFrontEnd, settings: ISettingRegistry) => {
-    const setting = await settings.load('maap-jupyter-server-extension:plugin');
+    const setting = await settings.load(MAAP_JUPYTER_SERVER_EXTENSION_ID);
+    const baseUrl = PageConfig.getBaseUrl();
 
+    // Get MAAP API URL and MAAP PGT Token and set them in the MAAP Extension settings
     try {
-      const res = await fetch('http://localhost:8888/maap-jupyter-server-extension/get-api-url');
-      console.log('Made call to backend');
-      const value = await res.json();
-      console.log('value:', value.apiUrl);
-      if (value) {
-        await setting.set('maapApiUrl', value.apiUrl);
-        console.log('maapApiUrl set to:', value.apiUrl);
-      } else {
-        console.warn('No MAAP_API_URL returned from server');
-      }
+      const res = await fetch(
+        `${baseUrl}maap-jupyter-server-extension/get-maap-params`
+      );
+      const { token, apiUrl } = await res.json();
+      await setting.set('maapApiUrl', apiUrl);
+      await setting.set('maapToken', token);
     } catch (error) {
-      console.error('Failed to fetch env variable from server:', error);
+      console.error('Failed to fetch MAAP parameters from server:', error);
     }
   }
 };

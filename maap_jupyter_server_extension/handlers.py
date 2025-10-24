@@ -4,7 +4,6 @@ import re
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
 import tornado
-from .config import MaapServerConfig
 
 def is_valid_env_var_value(value: str) -> bool:
     """
@@ -33,24 +32,24 @@ class GetApiUrlHandler(APIHandler):
 
         This endpoint attempts to read the environment variable `MAAP_API_URL` from
         the Jupyter server's environment and returns it as JSON. If the environment
-        variable is not set or any other error occurs, the handler
+        variable is not set, an empty string is returned. If any errors, the handler
         responds with HTTP status 500 and a JSON error message.
 
         Responses:
             200 OK:
                 {
-                    "apiUrl": "<value of MAAP_API_URL>"
+                    "apiUrl": "api_url_value" or ""
                 }
 
             500 Internal Server Error:
                 {
-                    "error": "<error description>"
+                    "error": "Error message"
                 }
     """
     @tornado.web.authenticated
     def get(self):
         try:
-            maap_api_url = os.environ.get('MAAP_API_URL')
+            maap_api_url = os.environ.get('MAAP_API_URL', "")
             self.finish(json.dumps({
                 "apiUrl": maap_api_url
             }))
@@ -66,12 +65,12 @@ class GetTokenHandler(APIHandler):
         GET /maap-jupyter-server-extension/get-token
 
         Retrieves the value of the `MAAP_PGT_TOKEN` environment variable and returns it as a JSON response.
-        If not set, returns None.
+        If not set, returns empty string.
 
         Responses:
             200 OK:
                 {
-                    "token": "token_value" or None
+                    "token": "token_value" or ""
                 }
 
             500 Internal Server Error:
@@ -82,9 +81,43 @@ class GetTokenHandler(APIHandler):
     @tornado.web.authenticated
     def get(self):
         try:
-            token = os.environ.get('MAAP_PGT_TOKEN')
+            token = os.environ.get('MAAP_PGT_TOKEN', "")
             self.finish(json.dumps({
                     "token": token
+                }))
+        except Exception as e:
+            self.set_status(500)
+            self.finish(json.dumps({
+                "error": str(e)
+            }))
+
+class GetMaapParamsHandler(APIHandler):
+    """
+        GET /maap-jupyter-server-extension/get-maap-params
+
+        Retrieves the value of the `MAAP_API_URL` and `MAAP_PGT_TOKEN`. If not set, returns empty string.
+        If any errors, the handler responds with HTTP status 500 and a JSON error message.
+
+        Responses:
+            200 OK:
+                {
+                    "token": "token_value" or "",
+                    "apiUrl": "api_url_value" or ""
+                }
+
+            500 Internal Server Error:
+                {
+                    "error": "Error message"
+                }
+    """
+    @tornado.web.authenticated
+    def get(self):
+        try:
+            token = os.environ.get('MAAP_PGT_TOKEN', "")
+            api_url = os.environ.get('MAAP_API_URL', "")
+            self.finish(json.dumps({
+                    "token": token,
+                    "apiUrl": api_url
                 }))
         except Exception as e:
             self.set_status(500)
@@ -159,12 +192,14 @@ def setup_handlers(web_app):
     test_route = url_path_join(base_url, "maap-jupyter-server-extension", "test")
     get_api_url_route = url_path_join(base_url, "maap-jupyter-server-extension", "get-api-url")
     get_token_route = url_path_join(base_url, "maap-jupyter-server-extension", "get-token")
-    set_token_route = url_path_join(base_url, "maap-jupyter-server-extension", "set-token")
+    get_maap_params_route = url_path_join(base_url, "maap-jupyter-server-extension", "get-maap-params")
+    # set_token_route = url_path_join(base_url, "maap-jupyter-server-extension", "set-token")
 
     handlers = [
         (test_route, TestHandler), 
         (get_api_url_route, GetApiUrlHandler),
         (get_token_route, GetTokenHandler),
-        (set_token_route, SetTokenHandler)
+        (get_maap_params_route, GetMaapParamsHandler),
+        # (set_token_route, SetTokenHandler)
     ]
     web_app.add_handlers(host_pattern, handlers)
