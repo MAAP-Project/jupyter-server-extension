@@ -7,8 +7,12 @@
       "maapApiUrl": {
         "type": "string",
         "title": "MAAP API URL",
-        "default": "none",
-        "description": "URL for the MAAP API backend."
+        "description": "MAAP API URL e.g. https://api.maap-project.org"
+      },
+      "maapToken": {
+        "type": "string",
+        "title": "MAAP PGT Token",
+        "description": "User token for API requests e.g. PGT-XXXXXXX"
       }
     }
   }
