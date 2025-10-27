@@ -3,16 +3,19 @@
     "title": "MAAP Settings",
     "description": "Settings for MAAP Jupyter extensions.",
     "type": "object",
+    "additionalProperties": false,
     "properties": {
       "maapApiUrl": {
         "type": "string",
         "title": "MAAP API URL",
-        "description": "e.g. https://api.maap-project.org"
+        "description": "e.g. https://api.maap-project.org",
+        "default": ""
       },
       "maapToken": {
         "type": "string",
         "title": "MAAP PGT Token",
-        "description": "e.g. PGT-XXXXXXX"
+        "description": "e.g. PGT-XXXXXXX",
+        "default": ""
       }
     }
   }
