@@ -16,11 +16,11 @@ const plugin: JupyterFrontEndPlugin<void> = {
     const setting = await settings.load(MAAP_JUPYTER_SERVER_EXTENSION_ID);
     const baseUrl = PageConfig.getBaseUrl();
 
-    setting.changed.connect(() => {
-      const newUrl = setting.get('maapApiUrl').composite as string;
-      // const newToken = setting.get('maapToken').composite as string;
-      // console.log('MAAP API URL updated by user:', newUrl);
-    });
+    // setting.changed.connect(() => {
+    //   const newUrl = setting.get('maapApiUrl').composite as string;
+    //   const newToken = setting.get('maapToken').composite as string;
+    //   console.log('MAAP API URL updated by user:', newUrl);
+    // });
 
     // Get MAAP API URL and MAAP PGT Token and set them in the MAAP Extension settings
     try {
