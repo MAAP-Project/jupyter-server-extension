@@ -78,7 +78,6 @@ class WorkspaceContainerHandler(APIHandler):
     # Jupyter server
     #@tornado.web.authenticated
     def get(self):
-        print("graceal1 in WorkspaceContainerHandler")
         dockerimage_path_default = os.getenv('DOCKERIMAGE_PATH_DEFAULT')
         dockerimage_path_base_image = os.getenv("DOCKERIMAGE_PATH_BASE_IMAGE")
         self.finish({"DOCKERIMAGE_PATH_DEFAULT": dockerimage_path_default, "DOCKERIMAGE_PATH_BASE_IMAGE": dockerimage_path_base_image})
@@ -453,7 +452,8 @@ class InjectKeyHandler(IPythonHandler):
             print("=== Injecting SSH KEY ===")
 
             # Check if .ssh directory exists, if not create it
-            os.chdir('/home/jovyan')
+            home_dir = os.environ.get("JUPYTER_SERVER_ROOT", "/home/jovyan")
+            os.chdir(home_dir)
             if not os.path.exists(".ssh"):
                 os.makedirs(".ssh")
 
@@ -474,7 +474,7 @@ class InjectKeyHandler(IPythonHandler):
 
             # If not in file, inject key into authorized keys
             if not found:
-                cmd = "echo " + public_key + " >> .ssh/authorized_keys && chmod 700 /home/jovyan && chmod 700 .ssh/ && chmod 600 .ssh/authorized_keys"
+                cmd = "echo " + public_key + " >> .ssh/authorized_keys && chmod 700 " + home_dir + " && chmod 700 .ssh/ && chmod 600 .ssh/authorized_keys"
                 print(cmd)
                 subprocess.check_output(cmd, shell=True)
                 print("=== INJECTED KEY ===")
@@ -640,11 +640,14 @@ class AccountInfoHandler(IPythonHandler):
         profile = maap.profile.account_info(proxy_ticket = proxy_granting_ticket)
         self.finish({"profile": profile})
 
-# Is this secure??
-# class GetPGTHandler(IPythonHandler):
-#     def get(self):
-#         proxy_granting_ticket = os.environ('MAAP_PGT', '')
-#         self.finish({"MAAP_PGT": proxy_granting_ticket})
+class AccountInfoPGTENVHandler(IPythonHandler):
+    @tornado.web.authenticated
+    def get(self):
+        proxy_granting_ticket = os.environ.get('MAAP_PGT', '')
+
+        maap = MAAP()
+        profile = maap.profile.account_info(proxy_ticket = proxy_granting_ticket)
+        self.finish({"profile": profile})
 
 def setup_handlers(web_app):
     host_pattern = ".*$"
@@ -658,7 +661,7 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSSHInfo"), GetSSHInfoHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSignedS3Url"), Presigneds3UrlHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getAccountInfo"), AccountInfoHandler)])
-    #web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getMAAPPGT"), GetPGTHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getAccountInfoFromPGTENV"), AccountInfoPGTENVHandler)])
 
 
     # DPS
