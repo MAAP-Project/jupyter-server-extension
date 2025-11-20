@@ -549,7 +549,8 @@ class Presigneds3UrlHandler(IPythonHandler):
         abs_path = os.path.join(rt_path, key)
         proxy_ticket = self.get_argument('proxy-ticket','')
         expiration = self.get_argument('duration','86400') # default 24 hrs
-        che_ws_namespace = os.environ.get('CHE_WORKSPACE_NAMESPACE')
+        # This is replacing the workspace name because the buckets correspond to the username
+        username = self.get_argument('username', '')
 
         print('bucket is '+bucket)     
         print('key is '+key)        
@@ -588,7 +589,7 @@ class Presigneds3UrlHandler(IPythonHandler):
         # expiration = '43200' # 12 hrs in seconds
         print('expiration is {} seconds', expiration)
 
-        url = '{}/api/members/self/presignedUrlS3/{}/{}?exp={}&ws={}'.format(maap_api_url(self.request.host), bucket, key, expiration, che_ws_namespace)
+        url = '{}/api/members/self/presignedUrlS3/{}/{}?exp={}&ws={}'.format(maap_api_url(self.request.host), bucket, key, expiration, username)
         headers = {'Accept': 'application/json', 'proxy-ticket': proxy_ticket}
         r = requests.get(
             url,
