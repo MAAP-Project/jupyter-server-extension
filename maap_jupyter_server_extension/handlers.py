@@ -590,17 +590,16 @@ class Presigneds3UrlHandler(IPythonHandler):
         print('expiration is {} seconds', expiration)
 
         url = '{}/api/members/self/presignedUrlS3/{}/{}?exp={}&ws={}'.format(maap_api_url(self.request.host), bucket, key, expiration, username)
-        raise Exception(self.request.host)
-        # headers = {'Accept': 'application/json', 'proxy-ticket': proxy_ticket}
-        # r = requests.get(
-        #     url,
-        #     headers=headers,
-        #     verify=False
-        # )
-        # print(r.text)
+        headers = {'Accept': 'application/json', 'proxy-ticket': proxy_ticket}
+        r = requests.get(
+            url,
+            headers=headers,
+            verify=False
+        )
+        print(r.text)
 
-        # resp = json.loads(r.text)   
-        # self.finish({"status_code":200, "message": "success", "url":resp['url']})
+        resp = json.loads(r.text)   
+        self.finish({"status_code":200, "message": "success", "url":resp['url']})
 
 
 class CreateFileHandler(IPythonHandler):
