@@ -27,6 +27,9 @@ def get_maap_config(host):
     maap_api_config_endpoint = os.getenv("MAAP_API_CONFIG_ENDPOINT", "api/environment/config")
     ade_host = host if host in constants.ADE_OPTIONS else os.getenv("MAAP_ADE_HOST", constants.DEFAULT_ADE)
     environments_endpoint = "https://" + api_host + "/" + maap_api_config_endpoint + "/"+urllib.parse.quote(urllib.parse.quote("https://", safe=""))+ade_host
+    print("graceal1 ade host before calling environments endpoint")
+    print(environments_endpoint)
+    print(ade_host)
     return requests.get(environments_endpoint).json()
 
 def maap_api(host):
