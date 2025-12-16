@@ -1,16 +1,10 @@
 # maap_jupyter_server_extension
 
-[![Github Actions Status](/workflows/Build/badge.svg)](/actions/workflows/build.yml)
-
-A JupyterLab extension.
-
-This extension is composed of a Python package named `maap_jupyter_server_extension`
-for the server extension and a NPM package named `maap-jupyter-server-extension`
-for the frontend extension.
+Lightweight MAAP Jupyter extension that reads MAAP environment variables and sets them to this extension's Jupyter settings.
 
 ## Requirements
 
-- JupyterLab >= 4.0.0
+- JupyterLab >= 4.4.0
 
 ## Install
 
@@ -133,7 +127,3 @@ This extension uses [Playwright](https://playwright.dev/docs/intro) for the inte
 More precisely, the JupyterLab helper [Galata](https://github.com/jupyterlab/jupyterlab/tree/master/galata) is used to handle testing the extension in JupyterLab.
 
 More information are provided within the [ui-tests](./ui-tests/README.md) README.
-
-### Packaging the extension
-
-See [RELEASE](RELEASE.md)
