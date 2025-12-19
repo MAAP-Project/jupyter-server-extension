@@ -49,6 +49,9 @@ jobs:
           chmod +x "$HOME/.local/bin/jlpm"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
+      - name: Install dependencies
+        run: jlpm install
+
       - name: Run linting
         run: jlpm lint:ci
 
