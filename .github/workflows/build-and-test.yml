@@ -58,6 +58,16 @@ jobs:
         working-directory: ui-tests
         run: npx playwright install --with-deps
 
+      - name: Install MAAP Jupyter server extension
+        run: |
+            python -m pip install -e .
+
+      - name: Enable MAAP Jupyter server extension
+        run: |
+            jupyter server extension list
+            jupyter server extension enable --py maap_jupyter_server_extension || true
+            jupyter server extension list
+
       - name: Run UI tests
         working-directory: ui-tests
         env:
