@@ -49,12 +49,6 @@ jobs:
           chmod +x "$HOME/.local/bin/jlpm"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: Install dependencies
-        run: jlpm install
-
-      - name: Run linting
-        run: jlpm lint:ci
-
       - name: Install ui-tests dependencies
         working-directory: ui-tests
         run: npm ci
@@ -72,6 +66,9 @@ jobs:
             jupyter server extension list
             jupyter server extension enable --py maap_jupyter_server_extension || true
             jupyter server extension list
+
+      - name: Run linting
+        run: jlpm lint:ci
 
       - name: Run UI tests
         working-directory: ui-tests
