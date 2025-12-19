@@ -35,7 +35,6 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: ui-tests/package-lock.json
 
       - name: Enable Corepack (provides Yarn)
         run: corepack enable
@@ -49,6 +48,9 @@ jobs:
           EOF
           chmod +x "$HOME/.local/bin/jlpm"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Run linting
+        run: jlpm lint:ci
 
       - name: Install ui-tests dependencies
         working-directory: ui-tests
