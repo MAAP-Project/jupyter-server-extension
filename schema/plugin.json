@@ -8,7 +8,7 @@
     "maapApiUrl": {
       "type": "string",
       "title": "MAAP API URL:",
-      "description": "e.g. https://api.uat.maap-project.org",
+      "description": "e.g. https://api.uat.maap-project.org/",
       "default": ""
     },
     "maapToken": {
