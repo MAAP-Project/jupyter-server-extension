@@ -13,7 +13,7 @@
     },
     "maapToken": {
       "type": "string",
-      "title": "MAAP PGT Token:",
+      "title": "MAAP PGT:",
       "description": "Token used to make authenticated requests to the MAAP API. e.g. PGT-XXXXXXX",
       "default": ""
     },
