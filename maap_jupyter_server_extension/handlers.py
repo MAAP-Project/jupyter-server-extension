@@ -95,14 +95,15 @@ class GetMaapParamsHandler(APIHandler):
     """
         GET /maap-jupyter-server-extension/get-maap-params
 
-        Retrieves the value of the `MAAP_API_URL` and `MAAP_PGT_TOKEN`. If not set, returns empty string.
+        Retrieves the value of the `MAAP_API_URL`, `MAAP_PGT_TOKEN`, and `DOCKERIMAGE_PATH_DEFAULT`. If not set, returns empty string.
         If any errors, the handler responds with HTTP status 500 and a JSON error message.
 
         Responses:
             200 OK:
                 {
                     "maapToken": "token_value" or "",
-                    "maapApiUrl": "api_url_value" or ""
+                    "maapApiUrl": "api_url_value" or "",
+                    "defaultAppImage": "docker_image_path_default" or ""
                 }
 
             500 Internal Server Error:
@@ -115,9 +116,11 @@ class GetMaapParamsHandler(APIHandler):
         try:
             token = os.environ.get('MAAP_PGT_TOKEN', "")
             api_url = os.environ.get('MAAP_API_URL', "")
+            docker_image_path_default = os.environ.get('DOCKERIMAGE_PATH_DEFAULT', "")
             self.finish(json.dumps({
                     "maapToken": token,
-                    "maapApiUrl": api_url
+                    "maapApiUrl": api_url,
+                    "defaultAppImage": docker_image_path_default
                 }))
         except Exception as e:
             self.set_status(500)
