@@ -15,6 +15,25 @@ def is_valid_env_var_value(value: str) -> bool:
     pattern = re.compile(r"^[\x20-\x7E]+$")
     return bool(pattern.fullmatch(value))
 
+def format_api_url(api_host: str) -> str:
+    """
+    Formats an API host to a full URL.
+    If api_host is empty, returns empty string.
+    Otherwise ensures the URL has https:// prefix and trailing slash.
+    """
+    if not api_host:
+        return ""
+
+    # Remove any trailing slashes first
+    api_host = api_host.rstrip('/')
+
+    # Add https:// if not present
+    if not api_host.startswith('http://') and not api_host.startswith('https://'):
+        api_host = 'https://' + api_host
+
+    # Add trailing slash
+    return api_host + '/'
+
 class TestHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
     # patch, put, delete, options) to ensure only authorized user can request the
@@ -30,7 +49,7 @@ class GetApiUrlHandler(APIHandler):
     """
         GET /maap-jupyter-server-extension/get-api-url
 
-        This endpoint attempts to read the environment variable `MAAP_API_URL` from
+        This endpoint attempts to read the environment variable `MAAP_API_HOST` from
         the Jupyter server's environment and returns it as JSON. If the environment
         variable is not set, an empty string is returned. If any errors, the handler
         responds with HTTP status 500 and a JSON error message.
@@ -49,7 +68,8 @@ class GetApiUrlHandler(APIHandler):
     @tornado.web.authenticated
     def get(self):
         try:
-            maap_api_url = os.environ.get('MAAP_API_URL', "")
+            maap_api_host = os.environ.get('MAAP_API_HOST', "")
+            maap_api_url = format_api_url(maap_api_host)
             self.finish(json.dumps({
                 "maapApiUrl": maap_api_url
             }))
@@ -95,7 +115,7 @@ class GetMaapParamsHandler(APIHandler):
     """
         GET /maap-jupyter-server-extension/get-maap-params
 
-        Retrieves the value of the `MAAP_API_URL`, `MAAP_PGT_TOKEN`, and `DOCKERIMAGE_PATH_DEFAULT`. If not set, returns empty string.
+        Retrieves the value of the `MAAP_API_HOST`, `MAAP_PGT_TOKEN`, and `DOCKERIMAGE_PATH_DEFAULT`. If not set, returns empty string.
         If any errors, the handler responds with HTTP status 500 and a JSON error message.
 
         Responses:
@@ -115,7 +135,8 @@ class GetMaapParamsHandler(APIHandler):
     def get(self):
         try:
             token = os.environ.get('MAAP_PGT', "")
-            api_url = os.environ.get('MAAP_API_URL', "")
+            api_host = os.environ.get('MAAP_API_HOST', "")
+            api_url = format_api_url(api_host)
             docker_image_path_default = os.environ.get('DOCKERIMAGE_PATH_DEFAULT', "")
             self.finish(json.dumps({
                     "maapToken": token,
