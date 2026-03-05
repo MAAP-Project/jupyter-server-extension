@@ -114,7 +114,7 @@ class GetMaapParamsHandler(APIHandler):
     @tornado.web.authenticated
     def get(self):
         try:
-            token = os.environ.get('MAAP_PGT_TOKEN', "")
+            token = os.environ.get('MAAP_PGT', "")
             api_url = os.environ.get('MAAP_API_URL', "")
             docker_image_path_default = os.environ.get('DOCKERIMAGE_PATH_DEFAULT', "")
             self.finish(json.dumps({

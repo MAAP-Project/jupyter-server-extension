@@ -4,6 +4,7 @@ import {
 } from '@jupyterlab/application';
 import { PageConfig } from '@jupyterlab/coreutils';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { ServerConnection } from '@jupyterlab/services';
 
 const MAAP_JUPYTER_SERVER_EXTENSION_ID = 'maap-jupyter-server-extension:plugin';
 
@@ -32,17 +33,13 @@ const plugin: JupyterFrontEndPlugin<void> = {
     // });
 
     // Retrieve MAAP variables from environment and add them to the jupyter MAAP settings
-    fetch(`${baseUrl}maap-jupyter-server-extension/get-maap-params`)
-      .then(response => {
-        if (!response.ok) {
-          return response.text().then(data => {
-            return Promise.reject(
-              new Error(`${response.status} ${response.statusText}: ${data}`)
-            );
-          });
-        }
-        return response.json();
-      })
+    const serverSettings = ServerConnection.makeSettings();
+    ServerConnection.makeRequest(
+      `${baseUrl}maap-jupyter-server-extension/get-maap-params`,
+      { method: 'GET' },
+      serverSettings
+    )
+      .then(response => response.json())
       .then(async (maapParams: IMaapParams) => {
         // Update extension settings with the fetched MAAP environment variables
         try {
