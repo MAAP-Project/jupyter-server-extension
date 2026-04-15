@@ -138,10 +138,12 @@ class GetMaapParamsHandler(APIHandler):
             api_host = os.environ.get('MAAP_API_HOST', "")
             api_url = format_api_url(api_host)
             docker_image_path_default = os.environ.get('DOCKERIMAGE_PATH_DEFAULT', "")
+            docker_image_path_current = os.environ.get('DOCKERIMAGE_PATH_BASE_IMAGE', "")
             self.finish(json.dumps({
                     "maapToken": token,
                     "maapApiUrl": api_url,
-                    "defaultAppImage": docker_image_path_default
+                    "defaultAppImage": docker_image_path_default,
+                    "currentAppImage": docker_image_path_current
                 }))
         except Exception as e:
             self.set_status(500)
