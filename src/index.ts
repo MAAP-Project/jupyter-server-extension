@@ -12,6 +12,7 @@ interface IMaapParams {
   maapApiUrl: string;
   maapToken: string;
   defaultAppImage: string;
+  currentAppImage: string;
 }
 
 const plugin: JupyterFrontEndPlugin<void> = {
@@ -46,7 +47,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
           await Promise.all([
             serverExtSettings.set('maapApiUrl', maapParams.maapApiUrl),
             serverExtSettings.set('maapToken', maapParams.maapToken),
-            serverExtSettings.set('defaultAppImage', maapParams.defaultAppImage)
+            serverExtSettings.set('defaultAppImage', maapParams.defaultAppImage),
+            serverExtSettings.set('currentAppImage', maapParams.currentAppImage)
           ]);
           console.log('Successfully updated MAAP extension settings.');
         } catch (error) {
