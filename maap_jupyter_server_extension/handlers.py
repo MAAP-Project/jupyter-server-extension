@@ -123,7 +123,9 @@ class GetMaapParamsHandler(APIHandler):
                 {
                     "maapToken": "token_value" or "",
                     "maapApiUrl": "api_url_value" or "",
-                    "defaultAppImage": "docker_image_path_default" or ""
+                    "defaultAppImage": "docker_image_path_default" or "",
+                    "currentAppImage": "docker_image_path_current" or "",
+                    "workspaceBucket": "workspace_bucket" or ""
                 }
 
             500 Internal Server Error:
@@ -139,11 +141,13 @@ class GetMaapParamsHandler(APIHandler):
             api_url = format_api_url(api_host)
             docker_image_path_default = os.environ.get('DOCKERIMAGE_PATH_DEFAULT', "")
             docker_image_path_current = os.environ.get('DOCKERIMAGE_PATH_BASE_IMAGE', "")
+            workspace_bucket = os.environ.get('WORKSPACE_BUCKET', "")
             self.finish(json.dumps({
                     "maapToken": token,
                     "maapApiUrl": api_url,
                     "defaultAppImage": docker_image_path_default,
-                    "currentAppImage": docker_image_path_current
+                    "currentAppImage": docker_image_path_current,
+                    "workspaceBucket": workspace_bucket
                 }))
         except Exception as e:
             self.set_status(500)

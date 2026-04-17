@@ -28,6 +28,12 @@
       "title": "Current Application Package Docker Image:",
       "description": "Docker image based on current image to use when building an OGC application package.\ne.g. mas.maap-project.org/root/maap-workspaces/2i2c/pangeo:v5.0.0",
       "default": ""
+    },
+    "workspace_bucket": {
+      "type": "string",
+      "title": "Workspace AWS S3 bucket:",
+      "description": "AWS S3 bucket that buckets are mounted to",
+      "default": ""
     }
   }
 }
