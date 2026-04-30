@@ -5,7 +5,6 @@ from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
 import tornado
 import subprocess
-from notebook.base.handlers import IPythonHandler
 
 def is_valid_env_var_value(value: str) -> bool:
     """
@@ -81,7 +80,7 @@ class GetApiUrlHandler(APIHandler):
                 "error": str(e)
             }))
 
-class InjectKeyHandler(IPythonHandler):
+class InjectKeyHandler(APIHandler):
     def get(self):
         public_key = self.get_argument('key', '')
 
