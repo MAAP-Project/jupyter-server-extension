@@ -206,10 +206,10 @@ def setup_handlers(web_app):
     get_inject_public_key_route = url_path_join(base_url, "maap-jupyter-server-extension", "inject-public-key")
 
     handlers = [
-        (test_route, TestHandler), 
+        (test_route, TestHandler),
         (get_api_url_route, GetApiUrlHandler),
         (get_token_route, GetTokenHandler),
         (get_maap_params_route, GetMaapParamsHandler),
-        {get_inject_public_key_route, InjectKeyHandler}
+        (get_inject_public_key_route, InjectKeyHandler)
     ]
     web_app.add_handlers(host_pattern, handlers)
