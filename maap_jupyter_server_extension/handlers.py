@@ -83,7 +83,6 @@ class GetApiUrlHandler(APIHandler):
             }))
 
 class InjectKeyHandler(APIHandler):
-    @tornado.web.authenticated
     def get(self):
         try:
             # Get MAAP API credentials from environment
