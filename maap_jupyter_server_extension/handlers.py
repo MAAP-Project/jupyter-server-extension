@@ -5,6 +5,8 @@ from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
 import tornado
 import subprocess
+import urllib.request
+import urllib.error
 
 def is_valid_env_var_value(value: str) -> bool:
     """
@@ -81,10 +83,55 @@ class GetApiUrlHandler(APIHandler):
             }))
 
 class InjectKeyHandler(APIHandler):
+    @tornado.web.authenticated
     def get(self):
-        public_key = self.get_argument('key', '')
+        try:
+            # Get MAAP API credentials from environment
+            maap_api_host = os.environ.get('MAAP_API_HOST', '')
+            maap_token = os.environ.get('MAAP_PGT', '')
 
-        if public_key:
+            if not maap_api_host or not maap_token:
+                self.set_status(500)
+                self.finish(json.dumps({
+                    "error": "MAAP_API_HOST or MAAP_PGT not set in environment"
+                }))
+                return
+
+            # Format the API URL
+            api_url = format_api_url(maap_api_host)
+            profile_url = f"{api_url}api/members/self"
+
+            # Make request to MAAP API to get profile information
+            print(f"=== Fetching profile from {profile_url} ===")
+            req = urllib.request.Request(profile_url)
+            req.add_header('cpticket', maap_token)
+
+            try:
+                with urllib.request.urlopen(req) as response:
+                    profile_data = json.loads(response.read().decode('utf-8'))
+            except urllib.error.HTTPError as e:
+                error_msg = f"Failed to fetch profile from MAAP API: HTTP {e.code}"
+                print(error_msg)
+                self.set_status(500)
+                self.finish(json.dumps({"error": error_msg}))
+                return
+            except urllib.error.URLError as e:
+                error_msg = f"Failed to connect to MAAP API: {str(e)}"
+                print(error_msg)
+                self.set_status(500)
+                self.finish(json.dumps({"error": error_msg}))
+                return
+
+            # Extract public SSH key from profile
+            public_key = profile_data.get('public_ssh_key', '')
+
+            if not public_key:
+                self.set_status(400)
+                self.finish(json.dumps({
+                    "error": "No public_ssh_key found in profile"
+                }))
+                return
+
             print("=== Injecting SSH KEY ===")
 
             # Check if .ssh directory exists, if not create it
@@ -114,8 +161,15 @@ class InjectKeyHandler(APIHandler):
                 print(cmd)
                 subprocess.check_output(cmd, shell=True)
                 print("=== INJECTED KEY ===")
+                self.finish(json.dumps({"status": "success", "message": "SSH key injected"}))
             else:
                 print("=== KEY ALREADY PRESENT ===")
+                self.finish(json.dumps({"status": "success", "message": "SSH key already present"}))
+
+        except Exception as e:
+            print(f"Error in InjectKeyHandler: {str(e)}")
+            self.set_status(500)
+            self.finish(json.dumps({"error": str(e)}))
 
 class GetTokenHandler(APIHandler):
     """
