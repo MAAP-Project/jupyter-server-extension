@@ -102,7 +102,6 @@ class InjectKeyHandler(APIHandler):
             profile_url = f"{api_url}api/members/self"
 
             # Make request to MAAP API to get profile information
-            print(f"=== Fetching profile from {profile_url} ===")
             req = urllib.request.Request(profile_url)
             req.add_header('cpticket', maap_token)
 
@@ -111,13 +110,11 @@ class InjectKeyHandler(APIHandler):
                     profile_data = json.loads(response.read().decode('utf-8'))
             except urllib.error.HTTPError as e:
                 error_msg = f"Failed to fetch profile from MAAP API: HTTP {e.code}"
-                print(error_msg)
                 self.set_status(500)
                 self.finish(json.dumps({"error": error_msg}))
                 return
             except urllib.error.URLError as e:
                 error_msg = f"Failed to connect to MAAP API: {str(e)}"
-                print(error_msg)
                 self.set_status(500)
                 self.finish(json.dumps({"error": error_msg}))
                 return
@@ -131,8 +128,6 @@ class InjectKeyHandler(APIHandler):
                     "error": "No public_ssh_key found in profile"
                 }))
                 return
-
-            print("=== Injecting SSH KEY ===")
 
             # Check if .ssh directory exists, if not create it
             home_dir = os.environ.get("JUPYTER_SERVER_ROOT", "/home/jovyan")
@@ -152,22 +147,17 @@ class InjectKeyHandler(APIHandler):
             found = False
             for line in linelist:
                 if public_key in line:
-                    print("Key already in authorized_keys")
                     found = True
 
             # If not in file, inject key into authorized keys
             if not found:
                 cmd = "echo " + public_key + " >> .ssh/authorized_keys && chmod 700 " + home_dir + " && chmod 700 .ssh/ && chmod 600 .ssh/authorized_keys"
-                print(cmd)
                 subprocess.check_output(cmd, shell=True)
-                print("=== INJECTED KEY ===")
                 self.finish(json.dumps({"status": "success", "message": "SSH key injected"}))
             else:
-                print("=== KEY ALREADY PRESENT ===")
                 self.finish(json.dumps({"status": "success", "message": "SSH key already present"}))
 
         except Exception as e:
-            print(f"Error in InjectKeyHandler: {str(e)}")
             self.set_status(500)
             self.finish(json.dumps({"error": str(e)}))
 
