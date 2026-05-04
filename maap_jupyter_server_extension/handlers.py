@@ -150,8 +150,15 @@ class InjectKeyHandler(APIHandler):
 
             # If not in file, inject key into authorized keys
             if not found:
-                cmd = "echo " + public_key + " >> .ssh/authorized_keys && chmod 700 " + home_dir + " && chmod 700 .ssh/ && chmod 600 .ssh/authorized_keys"
-                subprocess.check_output(cmd, shell=True)
+                # Append the key to authorized_keys using Python file operations
+                with open('.ssh/authorized_keys', 'a') as f:
+                    f.write(public_key + '\n')
+
+                # Set proper permissions
+                os.chmod(home_dir, 0o700)
+                os.chmod('.ssh', 0o700)
+                os.chmod('.ssh/authorized_keys', 0o600)
+
                 self.finish(json.dumps({"status": "success", "message": "SSH key injected"}))
             else:
                 self.finish(json.dumps({"status": "success", "message": "SSH key already present"}))
