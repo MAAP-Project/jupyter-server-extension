@@ -4,6 +4,9 @@ import re
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
 import tornado
+import subprocess
+import urllib.request
+import urllib.error
 
 def is_valid_env_var_value(value: str) -> bool:
     """
@@ -79,6 +82,90 @@ class GetApiUrlHandler(APIHandler):
                 "error": str(e)
             }))
 
+class InjectKeyHandler(APIHandler):
+    def get(self):
+        try:
+            # Get MAAP API credentials from environment
+            maap_api_host = os.environ.get('MAAP_API_HOST', '')
+            maap_token = os.environ.get('MAAP_PGT', '')
+
+            if not maap_api_host or not maap_token:
+                self.set_status(500)
+                self.finish(json.dumps({
+                    "error": "MAAP_API_HOST or MAAP_PGT not set in environment"
+                }))
+                return
+
+            # Format the API URL
+            api_url = format_api_url(maap_api_host)
+            profile_url = f"{api_url}api/members/self"
+
+            # Make request to MAAP API to get profile information
+            req = urllib.request.Request(profile_url)
+            req.add_header('cpticket', maap_token)
+
+            try:
+                with urllib.request.urlopen(req) as response:
+                    profile_data = json.loads(response.read().decode('utf-8'))
+            except urllib.error.HTTPError as e:
+                error_msg = f"Failed to fetch profile from MAAP API: HTTP {e.code}"
+                self.set_status(500)
+                self.finish(json.dumps({"error": error_msg}))
+                return
+            except urllib.error.URLError as e:
+                error_msg = f"Failed to connect to MAAP API: {str(e)}"
+                self.set_status(500)
+                self.finish(json.dumps({"error": error_msg}))
+                return
+
+            # Extract public SSH key from profile
+            public_key = profile_data.get('public_ssh_key', '')
+
+            if not public_key:
+                self.set_status(400)
+                self.finish(json.dumps({
+                    "error": "No public_ssh_key found in profile"
+                }))
+                return
+
+            # Check if .ssh directory exists, if not create it
+            home_dir = os.environ.get("JUPYTER_SERVER_ROOT", "/home/jovyan")
+            os.chdir(home_dir)
+            if not os.path.exists(".ssh"):
+                os.makedirs(".ssh")
+
+            # Check if authorized_keys file exits, if not create it
+            if not os.path.exists(".ssh/authorized_keys"):
+                with open(".ssh/authorized_keys", 'w'):
+                    pass
+
+            # Check if key already in file
+            with open('.ssh/authorized_keys', 'r') as f:
+                linelist = f.readlines()
+
+            found = False
+            for line in linelist:
+                if public_key in line:
+                    found = True
+
+            # If not in file, inject key into authorized keys
+            if not found:
+                # Append the key to authorized_keys using Python file operations
+                with open('.ssh/authorized_keys', 'a') as f:
+                    f.write(public_key + '\n')
+
+                # Set proper permissions
+                os.chmod(home_dir, 0o700)
+                os.chmod('.ssh', 0o700)
+                os.chmod('.ssh/authorized_keys', 0o600)
+
+                self.finish(json.dumps({"status": "success", "message": "SSH key injected"}))
+            else:
+                self.finish(json.dumps({"status": "success", "message": "SSH key already present"}))
+
+        except Exception as e:
+            self.set_status(500)
+            self.finish(json.dumps({"error": str(e)}))
 
 class GetTokenHandler(APIHandler):
     """
@@ -123,7 +210,9 @@ class GetMaapParamsHandler(APIHandler):
                 {
                     "maapToken": "token_value" or "",
                     "maapApiUrl": "api_url_value" or "",
-                    "defaultAppImage": "docker_image_path_default" or ""
+                    "defaultAppImage": "docker_image_path_default" or "",
+                    "currentAppImage": "docker_image_path_current" or "",
+                    "workspaceBucket": "workspace_bucket" or ""
                 }
 
             500 Internal Server Error:
@@ -138,10 +227,14 @@ class GetMaapParamsHandler(APIHandler):
             api_host = os.environ.get('MAAP_API_HOST', "")
             api_url = format_api_url(api_host)
             docker_image_path_default = os.environ.get('DOCKERIMAGE_PATH_DEFAULT', "")
+            docker_image_path_current = os.environ.get('DOCKERIMAGE_PATH_BASE_IMAGE', "")
+            workspace_bucket = os.environ.get("WORKSPACE_BUCKET", "")
             self.finish(json.dumps({
                     "maapToken": token,
                     "maapApiUrl": api_url,
-                    "defaultAppImage": docker_image_path_default
+                    "defaultAppImage": docker_image_path_default,
+                    "currentAppImage": docker_image_path_current,
+                    "workspaceBucket": workspace_bucket
                 }))
         except Exception as e:
             self.set_status(500)
@@ -160,11 +253,13 @@ def setup_handlers(web_app):
     get_api_url_route = url_path_join(base_url, "maap-jupyter-server-extension", "get-api-url")
     get_token_route = url_path_join(base_url, "maap-jupyter-server-extension", "get-token")
     get_maap_params_route = url_path_join(base_url, "maap-jupyter-server-extension", "get-maap-params")
+    get_inject_public_key_route = url_path_join(base_url, "maap-jupyter-server-extension", "inject-public-key")
 
     handlers = [
-        (test_route, TestHandler), 
+        (test_route, TestHandler),
         (get_api_url_route, GetApiUrlHandler),
         (get_token_route, GetTokenHandler),
-        (get_maap_params_route, GetMaapParamsHandler)
+        (get_maap_params_route, GetMaapParamsHandler),
+        (get_inject_public_key_route, InjectKeyHandler)
     ]
     web_app.add_handlers(host_pattern, handlers)
