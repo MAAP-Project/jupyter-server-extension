@@ -24,7 +24,10 @@ test.describe('MAAP Jupyter Server Extension Settings Test', () => {
     const body = await response.json();
     expect(body).toEqual({
       maapApiUrl: MAAP_API_URL,
-      maapToken: MAAP_PGT_TOKEN
+      maapToken: MAAP_PGT_TOKEN,
+      defaultAppImage: '',
+      currentAppImage: '',
+      workspaceBucket: ''
     });
 
     // Set retrieved environment variables to the extension settings
