@@ -1,0 +1,39 @@
+{
+  "jupyter.lab.setting-icon": "ui-components:settings",
+  "title": "MAAP Settings",
+  "description": "Settings for MAAP Jupyter extensions.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "maapApiUrl": {
+      "type": "string",
+      "title": "MAAP API URL:",
+      "description": "e.g. https://api.uat.maap-project.org/",
+      "default": ""
+    },
+    "maapToken": {
+      "type": "string",
+      "title": "MAAP PGT:",
+      "description": "Token used to make authenticated requests to the MAAP API. e.g. PGT-XXXXXXX",
+      "default": ""
+    },
+    "defaultAppImage": {
+      "type": "string",
+      "title": "Default Application Package Docker Image:",
+      "description": "Default docker image to use when building an OGC application package.\ne.g. mas.maap-project.org/root/maap-workspaces/custom_images/maap_base:v5.0.0",
+      "default": ""
+    },
+    "currentAppImage": {
+      "type": "string",
+      "title": "Current Application Package Docker Image:",
+      "description": "Docker image based on current image to use when building an OGC application package.\ne.g. mas.maap-project.org/root/maap-workspaces/2i2c/pangeo:v5.0.0",
+      "default": ""
+    },
+    "workspaceBucket": {
+      "type": "string",
+      "title": "Workspace Bucket:",
+      "description": "s3 bucket that files are mounted from",
+      "default": ""
+    }
+  }
+}
