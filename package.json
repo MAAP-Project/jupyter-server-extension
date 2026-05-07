@@ -1,6 +1,6 @@
 {
   "name": "maap-jupyter-server-extension",
-  "version": "2.1.4",
+  "version": "3.0.0",
   "description": "A JupyterLab extension.",
   "keywords": [
     "jupyter",

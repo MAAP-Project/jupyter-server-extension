@@ -76,7 +76,7 @@ class WorkspaceContainerHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
     # patch, put, delete, options) to ensure only authorized user can request the
     # Jupyter server
-    @tornado.web.authenticated
+    #@tornado.web.authenticated
     def get(self):
         dockerimage_path_default = os.getenv('DOCKERIMAGE_PATH_DEFAULT')
         dockerimage_path_base_image = os.getenv("DOCKERIMAGE_PATH_BASE_IMAGE")
@@ -452,7 +452,8 @@ class InjectKeyHandler(IPythonHandler):
             print("=== Injecting SSH KEY ===")
 
             # Check if .ssh directory exists, if not create it
-            os.chdir('/projects')
+            home_dir = os.environ.get("JUPYTER_SERVER_ROOT", "/home/jovyan")
+            os.chdir(home_dir)
             if not os.path.exists(".ssh"):
                 os.makedirs(".ssh")
 
@@ -473,7 +474,7 @@ class InjectKeyHandler(IPythonHandler):
 
             # If not in file, inject key into authorized keys
             if not found:
-                cmd = "echo " + public_key + " >> .ssh/authorized_keys && chmod 700 /projects && chmod 700 .ssh/ && chmod 600 .ssh/authorized_keys"
+                cmd = "echo " + public_key + " >> .ssh/authorized_keys && chmod 700 " + home_dir + " && chmod 700 .ssh/ && chmod 600 .ssh/authorized_keys"
                 print(cmd)
                 subprocess.check_output(cmd, shell=True)
                 print("=== INJECTED KEY ===")
@@ -548,7 +549,8 @@ class Presigneds3UrlHandler(IPythonHandler):
         abs_path = os.path.join(rt_path, key)
         proxy_ticket = self.get_argument('proxy-ticket','')
         expiration = self.get_argument('duration','86400') # default 24 hrs
-        che_ws_namespace = os.environ.get('CHE_WORKSPACE_NAMESPACE')
+        # This is replacing the workspace name because the buckets correspond to the username
+        username = self.get_argument('username', '')
 
         print('bucket is '+bucket)     
         print('key is '+key)        
@@ -587,7 +589,7 @@ class Presigneds3UrlHandler(IPythonHandler):
         # expiration = '43200' # 12 hrs in seconds
         print('expiration is {} seconds', expiration)
 
-        url = '{}/api/members/self/presignedUrlS3/{}/{}?exp={}&ws={}'.format(maap_api_url(self.request.host), bucket, key, expiration, che_ws_namespace)
+        url = '{}/api/members/self/presignedUrlS3/{}/{}?exp={}&ws={}'.format(maap_api_url(self.request.host), bucket, key, expiration, username)
         headers = {'Accept': 'application/json', 'proxy-ticket': proxy_ticket}
         r = requests.get(
             url,
@@ -639,6 +641,15 @@ class AccountInfoHandler(IPythonHandler):
         profile = maap.profile.account_info(proxy_ticket = proxy_granting_ticket)
         self.finish({"profile": profile})
 
+class AccountInfoPGTENVHandler(IPythonHandler):
+    @tornado.web.authenticated
+    def get(self):
+        proxy_granting_ticket = os.environ.get('MAAP_PGT', '')
+
+        maap = MAAP()
+        profile = maap.profile.account_info(proxy_ticket = proxy_granting_ticket)
+        self.finish({"profile": profile})
+
 def setup_handlers(web_app):
     host_pattern = ".*$"
 
@@ -651,6 +662,7 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSSHInfo"), GetSSHInfoHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getSignedS3Url"), Presigneds3UrlHandler)])
     web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getAccountInfo"), AccountInfoHandler)])
+    web_app.add_handlers(host_pattern, [(url_path_join(base_url, "jupyter-server-extension", "uwm", "getAccountInfoFromPGTENV"), AccountInfoPGTENVHandler)])
 
 
     # DPS
