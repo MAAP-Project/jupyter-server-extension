@@ -1,7 +1,0 @@
-{
-  "NotebookApp": {
-    "nbserver_extensions": {
-      "maap_jupyter_server_extension": true
-    }
-  }
-}
