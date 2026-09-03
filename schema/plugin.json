@@ -9,11 +9,11 @@
       "type": "string",
       "title": "MAAP API URL:",
       "description": "e.g. https://api.maap-project.org/",
-      "default": ""
+      "default": "https://api.maap-project.org/"
     },
     "maapToken": {
       "type": "string",
-      "title": "MAAP PGT:",
+      "title": "MAAP Token:",
       "description": "Token used to make authenticated requests to the MAAP API. e.g. jwt:XXXXXXX",
       "default": ""
     },
