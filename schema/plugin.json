@@ -8,25 +8,25 @@
     "maapApiUrl": {
       "type": "string",
       "title": "MAAP API URL:",
-      "description": "e.g. https://api.uat.maap-project.org/",
+      "description": "e.g. https://api.maap-project.org/",
       "default": ""
     },
     "maapToken": {
       "type": "string",
       "title": "MAAP PGT:",
-      "description": "Token used to make authenticated requests to the MAAP API. e.g. PGT-XXXXXXX",
+      "description": "Token used to make authenticated requests to the MAAP API. e.g. jwt:XXXXXXX",
       "default": ""
     },
     "defaultAppImage": {
       "type": "string",
       "title": "Default Application Package Docker Image:",
-      "description": "Default docker image to use when building an OGC application package.\ne.g. mas.maap-project.org/root/maap-workspaces/custom_images/maap_base:v5.0.0",
+      "description": "Default docker image to use when building an OGC application package.\ne.g. mas.maap-project.org/root/maap-workspaces/2i2c/pangeo:v6.0.0",
       "default": ""
     },
     "currentAppImage": {
       "type": "string",
       "title": "Current Application Package Docker Image:",
-      "description": "Docker image based on current image to use when building an OGC application package.\ne.g. mas.maap-project.org/root/maap-workspaces/2i2c/pangeo:v5.0.0",
+      "description": "Docker image based on current image to use when building an OGC application package.\ne.g. mas.maap-project.org/root/maap-workspaces/2i2c/pangeo:v6.0.0",
       "default": ""
     },
     "workspaceBucket": {
