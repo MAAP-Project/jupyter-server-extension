@@ -16,6 +16,14 @@ interface IMaapParams {
   workspaceBucket: string;
 }
 
+const MAAP_PARAM_KEYS: (keyof IMaapParams)[] = [
+  'maapApiUrl',
+  'maapToken',
+  'defaultAppImage',
+  'currentAppImage',
+  'workspaceBucket'
+];
+
 const plugin: JupyterFrontEndPlugin<void> = {
   id: MAAP_JUPYTER_SERVER_EXTENSION_ID,
   autoStart: true,
@@ -41,23 +49,30 @@ const plugin: JupyterFrontEndPlugin<void> = {
       { method: 'GET' },
       serverSettings
     )
-      .then(response => response.json())
-      .then(async (maapParams: IMaapParams) => {
-        // Update extension settings with the fetched MAAP environment variables
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status} ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then(async (maapParams: Partial<IMaapParams>) => {
+        // Only override settings the environment supplied a non-empty value for;
+        // everything else keeps its existing (saved or default) setting
+        const envKeys: (keyof IMaapParams)[] = [];
+        const keptKeys: (keyof IMaapParams)[] = [];
+        const updates: Promise<void>[] = [];
+        for (const key of MAAP_PARAM_KEYS) {
+          const value = maapParams[key];
+          if (typeof value === 'string' && value.trim() !== '') {
+            envKeys.push(key);
+            updates.push(serverExtSettings.set(key, value.trim()));
+          } else {
+            keptKeys.push(key);
+          }
+        }
+
         try {
-          await Promise.all([
-            serverExtSettings.set('maapApiUrl', maapParams.maapApiUrl),
-            serverExtSettings.set('maapToken', maapParams.maapToken),
-            serverExtSettings.set(
-              'defaultAppImage',
-              maapParams.defaultAppImage
-            ),
-            serverExtSettings.set(
-              'currentAppImage',
-              maapParams.currentAppImage
-            ),
-            serverExtSettings.set('workspaceBucket', maapParams.workspaceBucket)
-          ]);
+          await Promise.all(updates);
           console.log('Successfully updated MAAP extension settings.');
         } catch (error) {
           console.error('Failed to update MAAP extension settings: ', error);

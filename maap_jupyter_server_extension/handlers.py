@@ -24,6 +24,7 @@ def format_api_url(api_host: str) -> str:
     If api_host is empty, returns empty string.
     Otherwise ensures the URL has https:// prefix and trailing slash.
     """
+    api_host = api_host.strip()
     if not api_host:
         return ""
 
