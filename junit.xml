@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="5" failures="0" errors="0" time="1.811">
+  <testsuite name="maap-jupyter-server-extension:plugin" errors="0" failures="0" skipped="0" timestamp="2026-09-10T17:48:49" time="1.21" tests="5">
+    <testcase classname="maap-jupyter-server-extension:plugin overrides every setting the environment supplies" name="maap-jupyter-server-extension:plugin overrides every setting the environment supplies" time="0.01">
+    </testcase>
+    <testcase classname="maap-jupyter-server-extension:plugin keeps existing settings when the environment value is empty, blank or missing" name="maap-jupyter-server-extension:plugin keeps existing settings when the environment value is empty, blank or missing" time="0.002">
+    </testcase>
+    <testcase classname="maap-jupyter-server-extension:plugin trims whitespace from environment values before saving them" name="maap-jupyter-server-extension:plugin trims whitespace from environment values before saving them" time="0.001">
+    </testcase>
+    <testcase classname="maap-jupyter-server-extension:plugin leaves all settings unchanged when the environment supplies nothing" name="maap-jupyter-server-extension:plugin leaves all settings unchanged when the environment supplies nothing" time="0.002">
+    </testcase>
+    <testcase classname="maap-jupyter-server-extension:plugin leaves all settings unchanged when the server request fails" name="maap-jupyter-server-extension:plugin leaves all settings unchanged when the server request fails" time="0.002">
+    </testcase>
+  </testsuite>
+</testsuites>
